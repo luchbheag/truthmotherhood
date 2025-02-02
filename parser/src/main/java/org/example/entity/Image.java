@@ -12,7 +12,7 @@ public class Image {
     //private int album_id;
 
     // should be int or List<Integer> (Many-to-Many)?
-    private int postId;
+//    private int postId;
     private int height;
     private int width;
     private String url;
@@ -20,7 +20,7 @@ public class Image {
     @Override
     public String toString() {
         return "Image [id=" + id
-                + ", post_id=" + postId
+//                + ", post_id=" + postId
                 + ", height=" + height
                 + ", width=" + width
                 + ", url=" + url + "]";

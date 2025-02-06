@@ -3,10 +3,7 @@ package org.example;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.entity.Image;
-import org.example.entity.SimpleComment;
-import org.example.entity.ThreadComment;
-import org.example.entity.WallPost;
+import org.example.entity.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +23,7 @@ public class Parser {
             int id = 0;
 
             jParser.nextToken();
-            WallPost.WallPostBuilder wallPostBuilder = WallPost.builder();
+            WallPost.WallPostBuilder<?, ?> wallPostBuilder = WallPost.builder();
             while (jParser.nextToken() != null) {
                 if (jParser.currentName() != null) {
                     //System.out.println("RER" + jParser.currentToken() + " " + jParser.currentName());
@@ -45,6 +42,8 @@ public class Parser {
                             images = getImages(jParser);
                             break;
                         case "copy_history":
+                            wallPostBuilder.innerPost(getInnerPost(jParser));
+                            break;
                         case "likes":
                         case "comments":
                         case "reposts":
@@ -95,6 +94,39 @@ public class Parser {
             });
             it.getImages().forEach(System.out::println);
         });
+    }
+
+    private InnerPost getInnerPost(JsonParser jParser) throws IOException {
+        // CAN IT BE MORE THAN 1 COPY_HISTORY? YES
+        InnerPost.InnerPostBuilder<?, ?> innerPostBuilder = InnerPost.builder();
+        jParser.nextToken();
+        jParser.nextToken();
+        jParser.nextToken();
+        while (!(jParser.currentToken() == JsonToken.END_OBJECT)) {
+            //System.out.println(jParser.currentToken() + " " + jParser.currentName());
+            switch (jParser.currentName()) {
+                case "id":
+                    innerPostBuilder.id(getIntValue(jParser));
+                    break;
+                case "text":
+                    innerPostBuilder.text(jParser.getText());
+                    break;
+                case "attachments":
+                    innerPostBuilder.images(getImages(jParser));
+                    break;
+                case "post_source":
+                    jParser.nextToken();
+                    jParser.skipChildren();
+                    jParser.nextToken();
+                    break;
+            }
+            jParser.nextToken();
+        }
+        jParser.nextToken();
+        jParser.nextToken();
+        InnerPost innerPost = innerPostBuilder.build();
+        System.out.println("InnerPost: " + innerPost);
+        return innerPost;
     }
 
     private List<SimpleComment> getComments(JsonParser jParser) throws IOException {

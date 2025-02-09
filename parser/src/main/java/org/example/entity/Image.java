@@ -13,6 +13,7 @@ public class Image {
 
     // should be int or List<Integer> (Many-to-Many)?
 //    private int postId;
+    // TODO: should it be date here?
     private int height;
     private int width;
     private String url;

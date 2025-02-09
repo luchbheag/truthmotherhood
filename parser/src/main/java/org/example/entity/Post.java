@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -13,6 +13,13 @@ import java.util.List;
 public abstract class Post {
     Integer id;
     String text;
-//    private Date date;
+    LocalDateTime date;
     List<Image> images;
+
+    @Override
+    public String toString() {
+        return "WallPost [id=" + id
+                + ", date = " + date
+                + ", text = " + text + "]";
+    }
 }

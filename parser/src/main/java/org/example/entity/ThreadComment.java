@@ -17,6 +17,7 @@ public class ThreadComment extends SimpleComment {
         return "ThreadComment [id = " + id
                 + ", userId = " + userId
                 + ", postId = " + postId
+                + ", date = " + date
                 + ", text = " + text
                 + ", threadStarterId = " + threadStarterId
                 + ", userOfReply = " + userOfReply

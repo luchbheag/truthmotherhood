@@ -19,6 +19,7 @@ public class SimpleComment extends Comment {
         return "Comment [id = " + id
                 + ", userId = " + userId
                 + ", postId = " + postId
+                + ", date = " + date
                 + ", text = " + text;
     }
 

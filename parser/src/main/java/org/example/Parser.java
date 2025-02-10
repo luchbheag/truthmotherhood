@@ -3,13 +3,13 @@ package org.example;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.entity.Image;
-import org.example.entity.SimpleComment;
-import org.example.entity.ThreadComment;
-import org.example.entity.WallPost;
+import org.example.entity.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +26,7 @@ public class Parser {
             int id = 0;
 
             jParser.nextToken();
-            WallPost.WallPostBuilder wallPostBuilder = WallPost.builder();
+            WallPost.WallPostBuilder<?, ?> wallPostBuilder = WallPost.builder();
             while (jParser.nextToken() != null) {
                 if (jParser.currentName() != null) {
                     //System.out.println("RER" + jParser.currentToken() + " " + jParser.currentName());
@@ -38,13 +38,15 @@ public class Parser {
                         case "text":
                             wallPostBuilder.text(jParser.getText());
                             break;
+                        case "date":
+                            wallPostBuilder.date(getDateTime(getIntValue(jParser)));
+                            break;
                         case "attachments":
-//                            jParser.nextToken();
-//                            jParser.skipChildren();
-//                            jParser.nextToken();
                             images = getImages(jParser);
                             break;
                         case "copy_history":
+                            wallPostBuilder.innerPost(getInnerPost(jParser));
+                            break;
                         case "likes":
                         case "comments":
                         case "reposts":
@@ -97,6 +99,42 @@ public class Parser {
         });
     }
 
+    private InnerPost getInnerPost(JsonParser jParser) throws IOException {
+        // CAN IT BE MORE THAN 1 COPY_HISTORY? YES
+        InnerPost.InnerPostBuilder<?, ?> innerPostBuilder = InnerPost.builder();
+        jParser.nextToken();
+        jParser.nextToken();
+        jParser.nextToken();
+        while (!(jParser.currentToken() == JsonToken.END_OBJECT)) {
+            //System.out.println(jParser.currentToken() + " " + jParser.currentName());
+            switch (jParser.currentName()) {
+                case "id":
+                    innerPostBuilder.id(getIntValue(jParser));
+                    break;
+                case "text":
+                    innerPostBuilder.text(jParser.getText());
+                    break;
+                case "date":
+                    innerPostBuilder.date(getDateTime(getIntValue(jParser)));
+                    break;
+                case "attachments":
+                    innerPostBuilder.images(getImages(jParser));
+                    break;
+                case "post_source":
+                    jParser.nextToken();
+                    jParser.skipChildren();
+                    jParser.nextToken();
+                    break;
+            }
+            jParser.nextToken();
+        }
+        jParser.nextToken();
+        jParser.nextToken();
+        InnerPost innerPost = innerPostBuilder.build();
+        System.out.println("InnerPost: " + innerPost);
+        return innerPost;
+    }
+
     private List<SimpleComment> getComments(JsonParser jParser) throws IOException {
         List<SimpleComment> comments = new ArrayList<>();
         List<ThreadComment> threadComments;
@@ -120,6 +158,9 @@ public class Parser {
                     case "text":
                         jParser.nextToken();
                         commentBuilder.text(jParser.getText());
+                        break;
+                    case "date":
+                        commentBuilder.date(getDateTime(getIntValue(jParser)));
                         break;
                     case "attachments":
                         images = getImages(jParser);
@@ -185,6 +226,9 @@ public class Parser {
                         break;
                     case "post_id":
                         commentBuilder.postId(getIntValue(jParser));
+                        break;
+                    case "date":
+                        commentBuilder.date(getDateTime(getIntValue(jParser)));
                         break;
                     case "parents_stack":
                         jParser.nextToken();
@@ -296,5 +340,11 @@ public class Parser {
     private int getIntValue(JsonParser jParser) throws IOException {
         jParser.nextToken();
         return jParser.getIntValue();
+    }
+
+    private LocalDateTime getDateTime(long dateAsLong) throws IOException {
+        return Instant.ofEpochSecond(dateAsLong)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
     }
 }

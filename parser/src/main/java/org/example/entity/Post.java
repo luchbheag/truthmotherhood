@@ -10,11 +10,16 @@ import java.util.List;
 @Getter
 @Setter
 @SuperBuilder(toBuilder = true)
-public abstract class Comment {
+public abstract class Post {
     Integer id;
-    Integer userId; // many-to-one (many comments - to - one user)
-    LocalDateTime date;
-    Integer postId; // one-to-one
     String text;
+    LocalDateTime date;
     List<Image> images;
+
+    @Override
+    public String toString() {
+        return "WallPost [id=" + id
+                + ", date = " + date
+                + ", text = " + text + "]";
+    }
 }

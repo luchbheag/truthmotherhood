@@ -11,10 +11,10 @@ import java.util.List;
 @Setter
 @SuperBuilder(toBuilder = true)
 public abstract class Comment {
-    Integer id;
-    Integer userId; // many-to-one (many comments - to - one user)
+    Long id;
+    Long userId; // many-to-one (many comments - to - one user)
     LocalDateTime date;
-    Integer postId; // one-to-one
+    Long postId; // one-to-one
     String text;
     List<Image> images;
 }

@@ -8,14 +8,14 @@ import lombok.Setter;
 @Setter
 @Builder
 public class Image {
-    private int id;
+    private Long id;
     //private int album_id;
 
     // should be int or List<Integer> (Many-to-Many)?
 //    private int postId;
     // TODO: should it be date here?
-    private int height;
-    private int width;
+    private Integer height;
+    private Integer width;
     private String url;
 
     @Override

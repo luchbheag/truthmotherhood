@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Parser {
-    public void parse() {
+    public List<WallPost> parse() {
         ObjectMapper objectMapper = new ObjectMapper();
         InputStream is = Parser.class.getClassLoader().getResourceAsStream("wall_comments.json");
 
@@ -26,26 +26,34 @@ public class Parser {
             int id = 0;
 
             jParser.nextToken();
-            WallPost.WallPostBuilder<?, ?> wallPostBuilder = WallPost.builder();
+            WallPost.WallPostBuilder wallPostBuilder = WallPost.builder();
             while (jParser.nextToken() != null) {
                 if (jParser.currentName() != null) {
-                    //System.out.println("RER" + jParser.currentToken() + " " + jParser.currentName());
+                    //System.out.println(jParser.currentToken() + " " + jParser.currentName());
                     switch (jParser.currentName()) {
                         case "id":
                             jParser.nextToken();
-                            wallPostBuilder.id(jParser.getIntValue());
+                            wallPostBuilder.id(jParser.getLongValue());
+                            //System.out.println("ID: " + jParser.getLongValue());
                             break;
                         case "text":
                             wallPostBuilder.text(jParser.getText());
+                           //System.out.println("Text: " + jParser.getText());
                             break;
                         case "date":
-                            wallPostBuilder.date(getDateTime(getIntValue(jParser)));
+                            //System.out.println(jParser.currentToken() + " " + jParser.currentName());
+                            wallPostBuilder.date(getDateTime(getLongValue(jParser)));
+                            //System.out.println("Date: " + getDateTime(getLongValue(jParser)));
                             break;
                         case "attachments":
                             images = getImages(jParser);
                             break;
                         case "copy_history":
-                            wallPostBuilder.innerPost(getInnerPost(jParser));
+//                            wallPostBuilder.innerPost(getInnerPost(jParser));
+                            getInnerPost(jParser);
+                            break;
+                        case "comms":
+                            comments = getComments(jParser);
                             break;
                         case "likes":
                         case "comments":
@@ -56,16 +64,13 @@ public class Parser {
                             jParser.skipChildren();
                             jParser.nextToken();
                             break;
-                        case "comms":
-                            comments = getComments(jParser);
-                            break;
                     }
                 }
                 if (jParser.currentToken() == JsonToken.END_OBJECT) {
-                    wallPostBuilder.images(images);
+//                    wallPostBuilder.images(images);
                     WallPost post = wallPostBuilder.build();
-                    post.setComments(comments);
-                    post.setImages(new ArrayList<>());
+//                    post.setComments(comments);
+//                    post.setImages(new ArrayList<>());
                     posts.add(post);
                     wallPostBuilder = WallPost.builder();
                     comments = new ArrayList<>();
@@ -77,31 +82,36 @@ public class Parser {
             e.printStackTrace();
         }
 
-        posts.forEach(it -> {
-            System.out.println(it.getId());
-            System.out.println(it.getText());
-            System.out.println("Comments: " + it.getComments().size());
-            it.getComments().forEach(comment -> {
-                System.out.println("\t" + comment);
-                if (!comment.getImages().isEmpty()) {
-                    System.out.println(comment.getImages());
-                }
-                comment.getThreadComments().forEach(
-                        threadComment -> {
-                            System.out.println("\t\t" + threadComment);
-                            if (!threadComment.getImages().isEmpty()) {
-                                System.out.println(threadComment.getImages());
-                            }
-                        }
-                );
-            });
-            it.getImages().forEach(System.out::println);
-        });
+//
+//        posts.forEach(it -> {
+//            System.out.println(it.getId());
+//            System.out.println(it.getText());
+//            System.out.println("Comments: " + it.getComments().size());
+//            it.getComments().forEach(comment -> {
+//                System.out.println("\t" + comment);
+//                if (!comment.getImages().isEmpty()) {
+//                    System.out.println(comment.getImages());
+//                }
+//                comment.getThreadComments().forEach(
+//                        threadComment -> {
+//                            System.out.println("\t\t" + threadComment);
+//                            if (!threadComment.getImages().isEmpty()) {
+//                                System.out.println(threadComment.getImages());
+//                            }
+//                        }
+//                );
+//            });
+//            it.getImages().forEach(System.out::println);
+//        });
+        System.out.println("!!!");
+        posts.forEach(System.out::println);
+        System.out.println("!!!");
+        return posts;
     }
 
     private InnerPost getInnerPost(JsonParser jParser) throws IOException {
         // CAN IT BE MORE THAN 1 COPY_HISTORY? YES
-        InnerPost.InnerPostBuilder<?, ?> innerPostBuilder = InnerPost.builder();
+        InnerPost.InnerPostBuilder innerPostBuilder = InnerPost.builder();
         jParser.nextToken();
         jParser.nextToken();
         jParser.nextToken();
@@ -109,13 +119,13 @@ public class Parser {
             //System.out.println(jParser.currentToken() + " " + jParser.currentName());
             switch (jParser.currentName()) {
                 case "id":
-                    innerPostBuilder.id(getIntValue(jParser));
+                    innerPostBuilder.id(getLongValue(jParser));
                     break;
                 case "text":
                     innerPostBuilder.text(jParser.getText());
                     break;
                 case "date":
-                    innerPostBuilder.date(getDateTime(getIntValue(jParser)));
+                    innerPostBuilder.date(getDateTime(getLongValue(jParser)));
                     break;
                 case "attachments":
                     innerPostBuilder.images(getImages(jParser));
@@ -149,25 +159,25 @@ public class Parser {
                 switch (jParser.currentName()) {
                     case "id":
                         jParser.nextToken();
-                        commentBuilder.id(jParser.getIntValue());
+                        commentBuilder.id(jParser.getLongValue());
                         break;
                     case "from_id":
                         jParser.nextToken();
-                        commentBuilder.userId(jParser.getIntValue());
+                        commentBuilder.userId(jParser.getLongValue());
                         break;
                     case "text":
                         jParser.nextToken();
                         commentBuilder.text(jParser.getText());
                         break;
                     case "date":
-                        commentBuilder.date(getDateTime(getIntValue(jParser)));
+                        commentBuilder.date(getDateTime(getLongValue(jParser)));
                         break;
                     case "attachments":
                         images = getImages(jParser);
                         break;
                     case "post_id":
                         jParser.nextToken();
-                        commentBuilder.postId(jParser.getIntValue());
+                        commentBuilder.postId(jParser.getLongValue());
                         break;
                     case "parents_stack":
                         jParser.skipChildren();
@@ -215,38 +225,38 @@ public class Parser {
             if (jParser.currentName() != null) {
                 switch (jParser.currentName()) {
                     case "id":
-                        commentBuilder.id(getIntValue(jParser));
+                        commentBuilder.id(getLongValue(jParser));
                         break;
                     case "text":
                         jParser.nextToken();
                         commentBuilder.text(jParser.getText());
                         break;
                     case "from_id":
-                        commentBuilder.userId(getIntValue(jParser));
+                        commentBuilder.userId(getLongValue(jParser));
                         break;
                     case "post_id":
-                        commentBuilder.postId(getIntValue(jParser));
+                        commentBuilder.postId(getLongValue(jParser));
                         break;
                     case "date":
-                        commentBuilder.date(getDateTime(getIntValue(jParser)));
+                        commentBuilder.date(getDateTime(getLongValue(jParser)));
                         break;
                     case "parents_stack":
                         jParser.nextToken();
-                        commentBuilder.threadStarterId(getIntValue(jParser));
+                        commentBuilder.threadStarterId(getLongValue(jParser));
                         jParser.nextToken();
                         break;
                     case "reply_to_user":
                         if (jParser.currentToken() != JsonToken.VALUE_NUMBER_INT) {
                             jParser.nextToken();
                         }
-                        commentBuilder.userOfReply(jParser.getIntValue());
+                        commentBuilder.userOfReply(jParser.getLongValue());
                         break;
                     case "reply_to_comment":
                         // TODO: careful: reply_to_comment and reply_to_user can be null if it adresses to threadStarter
                         if (jParser.currentToken() != JsonToken.VALUE_NUMBER_INT) {
                             jParser.nextToken();
                         }
-                        commentBuilder.commentOfReply(jParser.getIntValue());
+                        commentBuilder.commentOfReply(jParser.getLongValue());
                         break;
                     case "attachments":
                         images = getImages(jParser);
@@ -292,7 +302,7 @@ public class Parser {
                 && "photo".equals(jParser.currentName()))) {
             switch (jParser.currentName()) {
                 case "id":
-                    imageBuilder.id(getIntValue(jParser));
+                    imageBuilder.id(getLongValue(jParser));
                     break;
                 case "orig_photo":
                     fillImageSizesAndUrl(jParser, imageBuilder);
@@ -335,6 +345,11 @@ public class Parser {
         while (!"items".equals(jParser.currentName())) {
             jParser.nextToken();
         }
+    }
+
+    private long getLongValue(JsonParser jParser) throws IOException {
+        jParser.nextToken();
+        return jParser.getLongValue();
     }
 
     private int getIntValue(JsonParser jParser) throws IOException {

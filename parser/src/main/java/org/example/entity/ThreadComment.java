@@ -8,9 +8,9 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder(toBuilder = true)
 public class ThreadComment extends SimpleComment {
-    private Integer threadStarterId;
-    private Integer userOfReply;
-    private Integer commentOfReply;
+    private Long threadStarterId;
+    private Long userOfReply;
+    private Long commentOfReply;
 
     @Override
     public String toString() {

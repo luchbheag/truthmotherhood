@@ -41,7 +41,7 @@ public class Parser {
                            //System.out.println("Text: " + jParser.getText());
                             break;
                         case "date":
-                            //System.out.println(jParser.currentToken() + " " + jParser.currentName());
+                            //System.out.println("!!!" + jParser.currentToken() + " " + jParser.currentName());
                             wallPostBuilder.date(getDateTime(getLongValue(jParser)));
                             //System.out.println("Date: " + getDateTime(getLongValue(jParser)));
                             break;
@@ -49,8 +49,11 @@ public class Parser {
                             images = getImages(jParser);
                             break;
                         case "copy_history":
+                            //System.out.println("Copy history");
+                            wallPostBuilder.innerPost(getInnerPost(jParser));
+                            //System.out.println("Inner post");
 //                            wallPostBuilder.innerPost(getInnerPost(jParser));
-                            getInnerPost(jParser);
+//                            getInnerPost(jParser);
                             break;
                         case "comms":
                             comments = getComments(jParser);
@@ -103,14 +106,15 @@ public class Parser {
 //            });
 //            it.getImages().forEach(System.out::println);
 //        });
-        System.out.println("!!!");
-        posts.forEach(System.out::println);
-        System.out.println("!!!");
+//        System.out.println("!!!");
+//        posts.forEach(System.out::println);
+//        System.out.println("!!!");
         return posts;
     }
 
     private InnerPost getInnerPost(JsonParser jParser) throws IOException {
         // CAN IT BE MORE THAN 1 COPY_HISTORY? YES
+        //System.out.println("HERE");
         InnerPost.InnerPostBuilder innerPostBuilder = InnerPost.builder();
         jParser.nextToken();
         jParser.nextToken();
@@ -128,7 +132,9 @@ public class Parser {
                     innerPostBuilder.date(getDateTime(getLongValue(jParser)));
                     break;
                 case "attachments":
-                    innerPostBuilder.images(getImages(jParser));
+//                    innerPostBuilder.images(getImages(jParser));
+                    getImages(jParser);
+                    //System.out.println("ATTACHMENTS + image");
                     break;
                 case "post_source":
                     jParser.nextToken();
@@ -141,7 +147,8 @@ public class Parser {
         jParser.nextToken();
         jParser.nextToken();
         InnerPost innerPost = innerPostBuilder.build();
-        System.out.println("InnerPost: " + innerPost);
+        //System.out.println("HERE!");
+        //System.out.println("InnerPost: " + innerPost);
         return innerPost;
     }
 
@@ -297,9 +304,13 @@ public class Parser {
 
     private Image getImage(JsonParser jParser) throws IOException {
         jParser.nextToken();
+//        jParser.nextToken();
+//        jParser.nextToken();
+        //System.out.println(jParser.currentToken() + " " + jParser.currentName());
         Image.ImageBuilder imageBuilder = Image.builder();
         while (!(jParser.currentToken() == JsonToken.END_OBJECT
                 && "photo".equals(jParser.currentName()))) {
+            //System.out.println(jParser.currentToken() + " " + jParser.currentName());
             switch (jParser.currentName()) {
                 case "id":
                     imageBuilder.id(getLongValue(jParser));

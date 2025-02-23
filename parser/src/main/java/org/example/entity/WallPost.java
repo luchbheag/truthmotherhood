@@ -1,9 +1,6 @@
 package org.example.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CollectionId;
@@ -22,7 +19,6 @@ import java.util.List;
 @AllArgsConstructor
 public class WallPost {
     @Id
-    @Column
     Long id;
     @Column
     String text;
@@ -32,8 +28,11 @@ public class WallPost {
 //    List<Image> images;
 //    @Column
 //    List<SimpleComment> comments;
-//    @Column
-//    InnerPost innerPost;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "inner_post",
+            referencedColumnName = "id",
+            nullable = true)
+    InnerPost innerPost;
 
 //    public void addComment(SimpleComment comment) {
 //        if (comments == null) {

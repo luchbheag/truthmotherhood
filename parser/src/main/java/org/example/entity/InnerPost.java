@@ -1,26 +1,42 @@
 package org.example.entity;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
+@Data
+@Entity
+@Table(name="inner_posts")
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class InnerPost {
+    @Id
     Long id;
+    @Column
     String text;
+    @Column
     LocalDateTime date;
-    List<Image> images;
+//    List<Image> images;
 
     @Override
     public String toString() {
-        return "WallPost [id=" + id
+        return "InnerPost [id=" + id
                 + ", date = " + date
                 + ", text = " + text + "]";
     }
+
+    public boolean isNull() {
+        return id == null;
+    }
+
+//    @Override
+//    public int hashCode() {
+//        return Objects.hash(id, text, date);
+//    }
 }

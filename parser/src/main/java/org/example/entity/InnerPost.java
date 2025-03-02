@@ -2,6 +2,7 @@ package org.example.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,22 +18,27 @@ import java.util.Objects;
 @AllArgsConstructor
 public class InnerPost {
     @Id
-    Long id;
+    @Column(name = "inner_post_id")
+    private Long innerPostId;
     @Column
-    String text;
+    private String text;
     @Column
-    LocalDateTime date;
-//    List<Image> images;
+    private LocalDateTime date;
+    @OneToOne(mappedBy = "innerPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    private WallPost wallPost;
+    @OneToMany(mappedBy = "innerPost", cascade = CascadeType.ALL, orphanRemoval = true)
+//    @BatchSize(size = 10)
+    List<Image> images;
 
     @Override
     public String toString() {
-        return "InnerPost [id=" + id
+        return "InnerPost{" + innerPostId
                 + ", date = " + date
                 + ", text = " + text + "]";
     }
 
     public boolean isNull() {
-        return id == null;
+        return innerPostId == null;
     }
 
 //    @Override

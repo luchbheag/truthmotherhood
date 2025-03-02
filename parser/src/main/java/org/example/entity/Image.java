@@ -1,18 +1,25 @@
 package org.example.entity;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
+@Data
+@Entity
+@Table(name="images")
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Image {
+    @Id
     private Long id;
-    //private int album_id;
-
-    // should be int or List<Integer> (Many-to-Many)?
-//    private int postId;
+    @ManyToOne
+    @JoinColumn(name = "wall_post_id", nullable = true)
+    private WallPost wallPost;
+    @ManyToOne
+    @JoinColumn(name = "inner_post_id", nullable = true)
+    private InnerPost innerPost;
     // TODO: should it be date here?
     private Integer height;
     private Integer width;

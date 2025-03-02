@@ -14,49 +14,51 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Parser {
-    public List<WallPost> parse() {
+    private final JsonParser jParser;
+
+    public Parser() throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         InputStream is = Parser.class.getClassLoader().getResourceAsStream("wall_comments.json");
 
-        List<WallPost> posts = new ArrayList<>();
-        List<SimpleComment> comments = new ArrayList<>();
-        List<Image> images = new ArrayList<>();
-        try (JsonParser jParser = objectMapper.getFactory().createParser(is)) {
-            String text = "";
-            int id = 0;
+        jParser = objectMapper.getFactory().createParser(is);
+        jParser.nextToken();
+    }
 
-            jParser.nextToken();
+    public WallPost parseWallPost() {
+        WallPost post = null;
+        List<SimpleComment> comments = new ArrayList<>();
+        try {
             WallPost.WallPostBuilder wallPostBuilder = WallPost.builder();
-            while (jParser.nextToken() != null) {
+            while (jParser.nextToken() != null && jParser.currentToken() != JsonToken.END_OBJECT) {
+//                System.out.println("It was in while loop");
                 if (jParser.currentName() != null) {
-                    //System.out.println(jParser.currentToken() + " " + jParser.currentName());
                     switch (jParser.currentName()) {
                         case "id":
                             jParser.nextToken();
-                            wallPostBuilder.id(jParser.getLongValue());
-                            //System.out.println("ID: " + jParser.getLongValue());
+                            wallPostBuilder.wallPostId(jParser.getLongValue());
                             break;
                         case "text":
                             wallPostBuilder.text(jParser.getText());
-                           //System.out.println("Text: " + jParser.getText());
                             break;
                         case "date":
-                            //System.out.println("!!!" + jParser.currentToken() + " " + jParser.currentName());
                             wallPostBuilder.date(getDateTime(getLongValue(jParser)));
-                            //System.out.println("Date: " + getDateTime(getLongValue(jParser)));
                             break;
                         case "attachments":
-                            images = getImages(jParser);
+                            wallPostBuilder.images(getImages(jParser));
+//                            getImages(jParser);
                             break;
                         case "copy_history":
-                            //System.out.println("Copy history");
                             wallPostBuilder.innerPost(getInnerPost(jParser));
-                            //System.out.println("Inner post");
-//                            wallPostBuilder.innerPost(getInnerPost(jParser));
 //                            getInnerPost(jParser);
                             break;
                         case "comms":
+//                            System.out.println(jParser.currentToken() + " " + jParser.currentName());
+//                            jParser.skipChildren();
+//                            System.out.println(jParser.currentToken() + " " + jParser.currentName());
+//                            break;
                             comments = getComments(jParser);
+//                            System.out.println("Comments: " + comments.size());
+//                            System.out.println(jParser.currentToken() + " " + jParser.currentName());
                             break;
                         case "likes":
                         case "comments":
@@ -69,48 +71,110 @@ public class Parser {
                             break;
                     }
                 }
-                if (jParser.currentToken() == JsonToken.END_OBJECT) {
-//                    wallPostBuilder.images(images);
-                    WallPost post = wallPostBuilder.build();
+            }
+            post = wallPostBuilder.build();
+//            System.out.println(post);
 //                    post.setComments(comments);
 //                    post.setImages(new ArrayList<>());
-                    posts.add(post);
-                    wallPostBuilder = WallPost.builder();
-                    comments = new ArrayList<>();
-                    images = new ArrayList<>();
-                    jParser.nextToken();
-                }
-            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-//
-//        posts.forEach(it -> {
-//            System.out.println(it.getId());
-//            System.out.println(it.getText());
-//            System.out.println("Comments: " + it.getComments().size());
-//            it.getComments().forEach(comment -> {
-//                System.out.println("\t" + comment);
-//                if (!comment.getImages().isEmpty()) {
-//                    System.out.println(comment.getImages());
-//                }
-//                comment.getThreadComments().forEach(
-//                        threadComment -> {
-//                            System.out.println("\t\t" + threadComment);
-//                            if (!threadComment.getImages().isEmpty()) {
-//                                System.out.println(threadComment.getImages());
-//                            }
-//                        }
-//                );
-//            });
-//            it.getImages().forEach(System.out::println);
-//        });
-//        System.out.println("!!!");
-//        posts.forEach(System.out::println);
-//        System.out.println("!!!");
-        return posts;
+//        System.out.println("ENDING");
+        return post;
     }
+
+
+//    public List<WallPost> parse() {
+//        List<WallPost> posts = new ArrayList<>();
+//        List<SimpleComment> comments = new ArrayList<>();
+//        List<Image> images = new ArrayList<>();
+//        try {
+//            jParser.nextToken();
+//            WallPost.WallPostBuilder wallPostBuilder = WallPost.builder();
+//            while (jParser.nextToken() != null) {
+//                if (jParser.currentName() != null) {
+//                    switch (jParser.currentName()) {
+//                        case "id":
+//                            jParser.nextToken();
+//                            wallPostBuilder.wallPostId(jParser.getLongValue());
+//                            //System.out.println("ID: " + jParser.getLongValue());
+//                            break;
+//                        case "text":
+//                            wallPostBuilder.text(jParser.getText());
+//                           //System.out.println("Text: " + jParser.getText());
+//                            break;
+//                        case "date":
+//                            //System.out.println("!!!" + jParser.currentToken() + " " + jParser.currentName());
+//                            wallPostBuilder.date(getDateTime(getLongValue(jParser)));
+//                            //System.out.println("Date: " + getDateTime(getLongValue(jParser)));
+//                            break;
+//                        case "attachments":
+//                            images = getImages(jParser);
+//                            break;
+//                        case "copy_history":
+////                            System.out.println("Copy history");
+//                            wallPostBuilder.innerPost(getInnerPost(jParser));
+//                            //System.out.println("Inner post");
+//                            break;
+//                        case "comms":
+////                            System.out.println("Comments");
+////                            comments = getComments(jParser);
+//                            jParser.skipChildren();
+////                            System.out.println("Comments: " + comments);
+//                            break;
+//                        case "likes":
+//                        case "comments":
+//                        case "reposts":
+//                        case "post_source":
+//                        case "views":
+//                            jParser.nextToken();
+//                            jParser.skipChildren();
+//                            jParser.nextToken();
+//                            break;
+//                    }
+//                }
+//                if (jParser.currentToken() == JsonToken.END_OBJECT) {
+//                    wallPostBuilder.images(images);
+//                    WallPost post = wallPostBuilder.build();
+////                    post.setComments(comments);
+////                    post.setImages(new ArrayList<>());
+//                    posts.add(post);
+//                    wallPostBuilder = WallPost.builder();
+//                    comments = new ArrayList<>();
+//                    images = new ArrayList<>();
+//                    jParser.nextToken();
+//                }
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+////
+////        posts.forEach(it -> {
+////            System.out.println(it.getId());
+////            System.out.println(it.getText());
+////            System.out.println("Comments: " + it.getComments().size());
+////            it.getComments().forEach(comment -> {
+////                System.out.println("\t" + comment);
+////                if (!comment.getImages().isEmpty()) {
+////                    System.out.println(comment.getImages());
+////                }
+////                comment.getThreadComments().forEach(
+////                        threadComment -> {
+////                            System.out.println("\t\t" + threadComment);
+////                            if (!threadComment.getImages().isEmpty()) {
+////                                System.out.println(threadComment.getImages());
+////                            }
+////                        }
+////                );
+////            });
+////            it.getImages().forEach(System.out::println);
+////        });
+////        System.out.println("!!!");
+////        posts.forEach(System.out::println);
+////        System.out.println("!!!");
+//        return posts;
+//    }
 
     private InnerPost getInnerPost(JsonParser jParser) throws IOException {
         // CAN IT BE MORE THAN 1 COPY_HISTORY? YES
@@ -123,7 +187,7 @@ public class Parser {
             //System.out.println(jParser.currentToken() + " " + jParser.currentName());
             switch (jParser.currentName()) {
                 case "id":
-                    innerPostBuilder.id(getLongValue(jParser));
+                    innerPostBuilder.innerPostId(getLongValue(jParser));
                     break;
                 case "text":
                     innerPostBuilder.text(jParser.getText());
@@ -132,9 +196,8 @@ public class Parser {
                     innerPostBuilder.date(getDateTime(getLongValue(jParser)));
                     break;
                 case "attachments":
-//                    innerPostBuilder.images(getImages(jParser));
-                    getImages(jParser);
-                    //System.out.println("ATTACHMENTS + image");
+                    innerPostBuilder.images(getImages(jParser));
+//                    getImages(jParser);
                     break;
                 case "post_source":
                     jParser.nextToken();
@@ -147,8 +210,6 @@ public class Parser {
         jParser.nextToken();
         jParser.nextToken();
         InnerPost innerPost = innerPostBuilder.build();
-        //System.out.println("HERE!");
-        //System.out.println("InnerPost: " + innerPost);
         return innerPost;
     }
 
@@ -161,53 +222,113 @@ public class Parser {
         jParser.nextToken();
         while(!(jParser.currentToken() == JsonToken.END_ARRAY
                 && "comms".equals(jParser.currentName()))) {
-
-            if (jParser.currentName() != null) {
-                switch (jParser.currentName()) {
-                    case "id":
-                        jParser.nextToken();
-                        commentBuilder.id(jParser.getLongValue());
-                        break;
-                    case "from_id":
-                        jParser.nextToken();
-                        commentBuilder.userId(jParser.getLongValue());
-                        break;
-                    case "text":
-                        jParser.nextToken();
-                        commentBuilder.text(jParser.getText());
-                        break;
-                    case "date":
-                        commentBuilder.date(getDateTime(getLongValue(jParser)));
-                        break;
-                    case "attachments":
-                        images = getImages(jParser);
-                        break;
-                    case "post_id":
-                        jParser.nextToken();
-                        commentBuilder.postId(jParser.getLongValue());
-                        break;
-                    case "parents_stack":
-                        jParser.skipChildren();
-                        break;
-                    case "thread":
-                        threadComments = getThreadComments(jParser);
-                        commentBuilder.threadComments(threadComments);
-                        break;
-                }
-            }
-            if (jParser.getCurrentToken() == JsonToken.END_OBJECT
-                    && jParser.currentName() == null) {
-                commentBuilder.images(images);
-                SimpleComment comment = commentBuilder.build();
-                if (!comment.isEmpty()) {
+//
+//            if (jParser.currentName() != null) {
+//                switch (jParser.currentName()) {
+//                    case "id":
+//                        jParser.nextToken();
+//                        commentBuilder.id(jParser.getLongValue());
+//                        break;
+//                    case "from_id":
+//                        jParser.nextToken();
+//                        commentBuilder.userId(jParser.getLongValue());
+//                        break;
+//                    case "text":
+//                        jParser.nextToken();
+//                        commentBuilder.text(jParser.getText());
+//                        break;
+//                    case "date":
+//                        commentBuilder.date(getDateTime(getLongValue(jParser)));
+//                        break;
+//                    case "attachments":
+//                        images = getImages(jParser);
+//                        break;
+//                    case "post_id":
+//                        jParser.nextToken();
+//                        commentBuilder.postId(jParser.getLongValue());
+//                        break;
+//                    case "parents_stack":
+//                        jParser.skipChildren();
+//                        break;
+//                    case "thread":
+//                        threadComments = getThreadComments(jParser);
+//                        commentBuilder.threadComments(threadComments);
+//                        break;
+//                }
+//            }
+//            if (jParser.currentToken() == JsonToken.END_OBJECT
+//                    && jParser.currentName() == null) {
+//                commentBuilder.images(images);
+//                SimpleComment comment = commentBuilder.build();
+//                if (!comment.isEmpty()) {
+//                    comments.add(comment);
+//                }
+//                commentBuilder = SimpleComment.builder();
+//                images = new ArrayList<>();
+//            }
+            if (jParser.currentToken() == JsonToken.START_OBJECT
+            && jParser.currentName() == null) {
+//                System.out.println("HERE IT IS");
+                SimpleComment comment = getComment(jParser);
+//                System.out.println("GET COMM " + comment);
+//                System.out.println("!!!!" + jParser.currentToken() + " " + jParser.currentName());
+                if (comment != null) {
                     comments.add(comment);
                 }
-                commentBuilder = SimpleComment.builder();
-                images = new ArrayList<>();
             }
+//            System.out.println(jParser.currentToken() + " " + jParser.currentName());
             jParser.nextToken();
-        }
+        };
         return comments;
+    }
+
+    private SimpleComment getComment(JsonParser jParser) {
+        SimpleComment comment = null;
+        SimpleComment.SimpleCommentBuilder<?, ?> commentBuilder = SimpleComment.builder();
+        try {
+            while (!(jParser.currentToken() == JsonToken.END_OBJECT
+                    && jParser.currentName() == null)) {
+                if (jParser.currentName() != null) {
+                    switch (jParser.currentName()) {
+                        case "id":
+                            jParser.nextToken();
+                            commentBuilder.id(jParser.getLongValue());
+                            break;
+                        case "from_id":
+                            jParser.nextToken();
+                            commentBuilder.userId(jParser.getLongValue());
+                            break;
+                        case "text":
+                            jParser.nextToken();
+                            commentBuilder.text(jParser.getText());
+                            break;
+                        case "date":
+                            commentBuilder.date(getDateTime(getLongValue(jParser)));
+                            break;
+                        case "attachments":
+                            commentBuilder.images(getImages(jParser));
+                            break;
+                        case "post_id":
+                            jParser.nextToken();
+                            commentBuilder.postId(jParser.getLongValue());
+                            break;
+                        case "parents_stack":
+                            jParser.skipChildren();
+                            break;
+                        case "thread":
+                            jParser.nextToken();
+//                            jParser.skipChildren();
+                            commentBuilder.threadComments(getThreadComments(jParser));
+                            break;
+                    }
+                }
+                jParser.nextToken();
+            }
+            comment = commentBuilder.build();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return comment;
     }
 
     List<ThreadComment> getThreadComments(JsonParser jParser) throws IOException {
@@ -225,66 +346,125 @@ public class Parser {
         skipUntilItems(jParser);
         jParser.nextToken();
         jParser.nextToken();
-        ThreadComment.ThreadCommentBuilder<?, ?> commentBuilder = ThreadComment.builder();
-        List<Image> images = new ArrayList<>();
+//        System.out.println("\uD83D\uDD25" + jParser.currentToken() + " " + jParser.currentName());
         while(!(jParser.currentToken() == JsonToken.END_ARRAY
                 && "items".equals(jParser.currentName()))) {
-            if (jParser.currentName() != null) {
-                switch (jParser.currentName()) {
-                    case "id":
-                        commentBuilder.id(getLongValue(jParser));
-                        break;
-                    case "text":
-                        jParser.nextToken();
-                        commentBuilder.text(jParser.getText());
-                        break;
-                    case "from_id":
-                        commentBuilder.userId(getLongValue(jParser));
-                        break;
-                    case "post_id":
-                        commentBuilder.postId(getLongValue(jParser));
-                        break;
-                    case "date":
-                        commentBuilder.date(getDateTime(getLongValue(jParser)));
-                        break;
-                    case "parents_stack":
-                        jParser.nextToken();
-                        commentBuilder.threadStarterId(getLongValue(jParser));
-                        jParser.nextToken();
-                        break;
-                    case "reply_to_user":
-                        if (jParser.currentToken() != JsonToken.VALUE_NUMBER_INT) {
-                            jParser.nextToken();
-                        }
-                        commentBuilder.userOfReply(jParser.getLongValue());
-                        break;
-                    case "reply_to_comment":
-                        // TODO: careful: reply_to_comment and reply_to_user can be null if it adresses to threadStarter
-                        if (jParser.currentToken() != JsonToken.VALUE_NUMBER_INT) {
-                            jParser.nextToken();
-                        }
-                        commentBuilder.commentOfReply(jParser.getLongValue());
-                        break;
-                    case "attachments":
-                        images = getImages(jParser);
-                        break;
-                }
+            ThreadComment threadComment = getThreadComment(jParser);
+            if (threadComment != null) {
+                threadComments.add(threadComment);
             }
-            if (jParser.getCurrentToken() == JsonToken.END_OBJECT
-                    && jParser.currentName() == null) {
-                commentBuilder.images(images);
-                ThreadComment comment = commentBuilder.build();
-                if (!comment.isEmpty()) {
-                    threadComments.add(comment);
-                }
-                commentBuilder = ThreadComment.builder();
-                images = new ArrayList<>();
-            }
+//                switch (jParser.currentName()) {
+//                    case "id":
+//                        commentBuilder.id(getLongValue(jParser));
+//                        break;
+//                    case "text":
+//                        jParser.nextToken();
+//                        commentBuilder.text(jParser.getText());
+//                        break;
+//                    case "from_id":
+//                        commentBuilder.userId(getLongValue(jParser));
+//                        break;
+//                    case "post_id":
+//                        commentBuilder.postId(getLongValue(jParser));
+//                        break;
+//                    case "date":
+//                        commentBuilder.date(getDateTime(getLongValue(jParser)));
+//                        break;
+//                    case "parents_stack":
+//                        jParser.nextToken();
+//                        commentBuilder.threadStarterId(getLongValue(jParser));
+//                        jParser.nextToken();
+//                        break;
+//                    case "reply_to_user":
+//                        if (jParser.currentToken() != JsonToken.VALUE_NUMBER_INT) {
+//                            jParser.nextToken();
+//                        }
+//                        commentBuilder.userOfReply(jParser.getLongValue());
+//                        break;
+//                    case "reply_to_comment":
+//                        // TODO: careful: reply_to_comment and reply_to_user can be null if it adresses to threadStarter
+//                        if (jParser.currentToken() != JsonToken.VALUE_NUMBER_INT) {
+//                            jParser.nextToken();
+//                        }
+//                        commentBuilder.commentOfReply(jParser.getLongValue());
+//                        break;
+//                    case "attachments":
+//                        images = getImages(jParser);
+//                        break;
+//                }
+//            if (jParser.getCurrentToken() == JsonToken.END_OBJECT
+//                    && jParser.currentName() == null) {
+//                commentBuilder.images(images);
+//                ThreadComment comment = commentBuilder.build();
+//                if (!comment.isEmpty()) {
+//                    threadComments.add(comment);
+//                }
+//                commentBuilder = ThreadComment.builder();
+//                images = new ArrayList<>();
+//            }
             jParser.nextToken();
         }
         skipUntilEndOfThread(jParser);
 
         return threadComments;
+    }
+
+    private ThreadComment getThreadComment(JsonParser jParser) {
+//        System.out.println("ThreadComment starts");
+        ThreadComment comment = null;
+        ThreadComment.ThreadCommentBuilder<?, ?> commentBuilder = ThreadComment.builder();
+        try {
+            while (!(jParser.currentToken() == JsonToken.END_OBJECT
+                    && jParser.currentName() == null)) {
+                if (jParser.currentName() != null) {
+                    switch (jParser.currentName()) {
+                        case "id":
+                            commentBuilder.id(getLongValue(jParser));
+                            break;
+                        case "text":
+                            jParser.nextToken();
+                            commentBuilder.text(jParser.getText());
+                            break;
+                        case "from_id":
+                            commentBuilder.userId(getLongValue(jParser));
+                            break;
+                        case "post_id":
+                            commentBuilder.postId(getLongValue(jParser));
+                            break;
+                        case "date":
+                            commentBuilder.date(getDateTime(getLongValue(jParser)));
+                            break;
+                        case "parents_stack":
+                            jParser.nextToken();
+                            commentBuilder.threadStarterId(getLongValue(jParser));
+                            jParser.nextToken();
+                            break;
+                        case "reply_to_user":
+                            if (jParser.currentToken() != JsonToken.VALUE_NUMBER_INT) {
+                                jParser.nextToken();
+                            }
+                            commentBuilder.userOfReply(jParser.getLongValue());
+                            break;
+                        case "reply_to_comment":
+                            // TODO: careful: reply_to_comment and reply_to_user can be null if it adresses to threadStarter
+                            if (jParser.currentToken() != JsonToken.VALUE_NUMBER_INT) {
+                                jParser.nextToken();
+                            }
+                            commentBuilder.commentOfReply(jParser.getLongValue());
+                            break;
+                        case "attachments":
+                            commentBuilder.images(getImages(jParser));
+                            break;
+                    }
+                }
+                jParser.nextToken();
+            }
+            comment = commentBuilder.build();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return comment;
     }
 
     private List<Image> getImages(JsonParser jParser) throws IOException {
@@ -304,13 +484,9 @@ public class Parser {
 
     private Image getImage(JsonParser jParser) throws IOException {
         jParser.nextToken();
-//        jParser.nextToken();
-//        jParser.nextToken();
-        //System.out.println(jParser.currentToken() + " " + jParser.currentName());
         Image.ImageBuilder imageBuilder = Image.builder();
         while (!(jParser.currentToken() == JsonToken.END_OBJECT
                 && "photo".equals(jParser.currentName()))) {
-            //System.out.println(jParser.currentToken() + " " + jParser.currentName());
             switch (jParser.currentName()) {
                 case "id":
                     imageBuilder.id(getLongValue(jParser));
@@ -372,5 +548,9 @@ public class Parser {
         return Instant.ofEpochSecond(dateAsLong)
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
+    }
+
+    public boolean isEmpty() {
+        return jParser.currentToken() == null;
     }
 }

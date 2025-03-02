@@ -56,7 +56,7 @@ public class Parser {
 //                            jParser.skipChildren();
 //                            System.out.println(jParser.currentToken() + " " + jParser.currentName());
 //                            break;
-                            comments = getComments(jParser);
+                            wallPostBuilder.comments(getComments(jParser));
 //                            System.out.println("Comments: " + comments.size());
 //                            System.out.println(jParser.currentToken() + " " + jParser.currentName());
                             break;
@@ -215,9 +215,6 @@ public class Parser {
 
     private List<SimpleComment> getComments(JsonParser jParser) throws IOException {
         List<SimpleComment> comments = new ArrayList<>();
-        List<ThreadComment> threadComments;
-        List<Image> images = new ArrayList<>();
-        SimpleComment.SimpleCommentBuilder<?, ?> commentBuilder = SimpleComment.builder();
 
         jParser.nextToken();
         while(!(jParser.currentToken() == JsonToken.END_ARRAY
@@ -284,7 +281,7 @@ public class Parser {
 
     private SimpleComment getComment(JsonParser jParser) {
         SimpleComment comment = null;
-        SimpleComment.SimpleCommentBuilder<?, ?> commentBuilder = SimpleComment.builder();
+        SimpleComment.SimpleCommentBuilder commentBuilder = SimpleComment.builder();
         try {
             while (!(jParser.currentToken() == JsonToken.END_OBJECT
                     && jParser.currentName() == null)) {
@@ -292,7 +289,7 @@ public class Parser {
                     switch (jParser.currentName()) {
                         case "id":
                             jParser.nextToken();
-                            commentBuilder.id(jParser.getLongValue());
+                            commentBuilder.simpleCommentId(jParser.getLongValue());
                             break;
                         case "from_id":
                             jParser.nextToken();
@@ -306,19 +303,21 @@ public class Parser {
                             commentBuilder.date(getDateTime(getLongValue(jParser)));
                             break;
                         case "attachments":
-                            commentBuilder.images(getImages(jParser));
+//                            commentBuilder.images(getImages(jParser));
+                            getImages(jParser);
                             break;
-                        case "post_id":
-                            jParser.nextToken();
-                            commentBuilder.postId(jParser.getLongValue());
-                            break;
+//                        case "post_id":
+//                            jParser.nextToken();
+//                            commentBuilder.postId(jParser.getLongValue());
+//                            break;
                         case "parents_stack":
                             jParser.skipChildren();
                             break;
                         case "thread":
                             jParser.nextToken();
 //                            jParser.skipChildren();
-                            commentBuilder.threadComments(getThreadComments(jParser));
+                            getThreadComments(jParser);
+//                            commentBuilder.threadComments(getThreadComments(jParser));
                             break;
                     }
                 }
@@ -454,6 +453,7 @@ public class Parser {
                             break;
                         case "attachments":
                             commentBuilder.images(getImages(jParser));
+//                            getImages(jParser);
                             break;
                     }
                 }

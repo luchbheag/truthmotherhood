@@ -1,32 +1,52 @@
 package org.example.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
+@Data
+@Entity
+@Table(name = "simple_comments")
 @Getter
 @Setter
-@SuperBuilder(toBuilder = true)
-public class SimpleComment extends Comment {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class SimpleComment {
+    @Id
+    @Column(name = "simple_comment_id")
+    Long simpleCommentId;
+    Long userId;
+    LocalDateTime date;
+//    Long postId; // one-to-one
+    String text;
+//    @OneToMany(mappedBy = "simpleComment", cascade = CascadeType.ALL, orphanRemoval = true)
+//    @Fetch(FetchMode.SUBSELECT)
+//    @BatchSize(size = 10)
+//    List<Image> images = new ArrayList<>();;
+    @ManyToOne
+    @JoinColumn(name = "wall_post_id", nullable = false)
+    WallPost wallPost;
     // Think about: we can actually parse and store
     // to what user comment was sent in thread
-    List<ThreadComment> threadComments;
+//    List<ThreadComment> threadComments;
 
     @Override
     public String toString() {
-        return "Comment [id = " + id
+        return "Comment [id = " + simpleCommentId
                 + ", userId = " + userId
-                + ", postId = " + postId
                 + ", date = " + date
                 + ", text = " + text;
     }
 
     public boolean isEmpty() {
-        return id == null
-                && userId == null
-                && postId == null
-                && text == null;
+        return simpleCommentId == null;
     }
 }

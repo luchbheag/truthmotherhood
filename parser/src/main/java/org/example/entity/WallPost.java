@@ -5,6 +5,8 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -12,7 +14,7 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name="wall_posts")
+@Table(name = "wall_posts")
 @Getter
 @Setter
 @Builder
@@ -28,10 +30,12 @@ public class WallPost {
     @Column
     LocalDateTime date;
     @OneToMany(mappedBy = "wallPost", cascade = CascadeType.ALL, orphanRemoval = true)
-//    @BatchSize(size = 10)
-    List<Image> images;
-//    @OneToMany(mappedBy = "wallPost", cascade = CascadeType.ALL, orphanRemoval = true)
-//    List<SimpleComment> comments;
+    @BatchSize(size = 10)
+    List<Image> images = new ArrayList<>();;
+    @OneToMany(mappedBy = "wallPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 10)
+    List<SimpleComment> comments = new ArrayList<>();;
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "inner_post_id",
             referencedColumnName = "inner_post_id",

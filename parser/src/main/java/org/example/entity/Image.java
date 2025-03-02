@@ -14,16 +14,19 @@ import lombok.*;
 public class Image {
     @Id
     private Long id;
+    // TODO: should it be date here?
+    private Integer height;
+    private Integer width;
+    private String url;
     @ManyToOne
     @JoinColumn(name = "wall_post_id", nullable = true)
     private WallPost wallPost;
     @ManyToOne
     @JoinColumn(name = "inner_post_id", nullable = true)
     private InnerPost innerPost;
-    // TODO: should it be date here?
-    private Integer height;
-    private Integer width;
-    private String url;
+//    @ManyToOne
+//    @JoinColumn(name = "simple_comment_id", nullable = true)
+//    private SimpleComment simpleComment;
 
     @Override
     public String toString() {

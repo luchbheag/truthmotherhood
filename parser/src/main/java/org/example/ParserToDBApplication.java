@@ -2,6 +2,7 @@ package org.example;
 
 import jakarta.transaction.Transactional;
 import org.example.entity.Image;
+import org.example.entity.SimpleComment;
 import org.example.entity.WallPost;
 import org.example.repository.WallPostRepository;
 import org.hibernate.Hibernate;
@@ -12,6 +13,8 @@ import org.springframework.context.annotation.Bean;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @SpringBootApplication
 public class ParserToDBApplication {
@@ -40,7 +43,7 @@ public class ParserToDBApplication {
 //            saveAllWithRelations(posts, repository);
 //            repository.flush();
 //            repository.findAllWithImages().forEach(System.out::println);
-            List<WallPost> postsFromDb = repository.findAllWithDetails();
+            List<WallPost> postsFromDb = findAllWithDetails(repository);
 //            for (WallPost post : postsFromDb) {
 //                if (post.getInnerPost() != null) {
 //                    Hibernate.initialize(post.getInnerPost().getImages());
@@ -53,12 +56,13 @@ public class ParserToDBApplication {
                 if (post.getInnerPost() != null) {
                     System.out.println(post.getInnerPost().getImages());
                 }
+                System.out.println(post.getComments().size());
             });
             System.out.println("HERE IS FINE");
         };
     }
 
-    public void saveAllWithRelations(List<WallPost> wallPosts, WallPostRepository repository) {
+    private void saveAllWithRelations(List<WallPost> wallPosts, WallPostRepository repository) {
         for (WallPost post : wallPosts) {
             if (post.getInnerPost() != null) {
                 post.getInnerPost().setWallPost(post); // Устанавливаем связь WallPost → InnerPost
@@ -71,7 +75,8 @@ public class ParserToDBApplication {
         repository.saveAll(wallPosts); // Теперь Hibernate сохранит всё правильно!
     }
 
-    public void saveWallPostWithRelations(WallPost post, WallPostRepository repository) {
+    @Transactional
+    void saveWallPostWithRelations(WallPost post, WallPostRepository repository) {
         for (Image image : post.getImages()) {
             image.setWallPost(post);
         }
@@ -82,6 +87,51 @@ public class ParserToDBApplication {
                 image.setInnerPost(post.getInnerPost());
             }
         }
+        for (SimpleComment comment : post.getComments()) {
+            comment.setWallPost(post);
+//            if (comment.isEmpty()) {
+//                for (Image image : comment.getImages()) {
+//                    image.setSimpleComment(comment);
+//                }
+//            }
+        }
         repository.save(post);
+    }
+
+    @Transactional
+    List<WallPost> findAllWithDetails(WallPostRepository repository) {
+//        List<WallPost> posts = repository.findAllWithInnerPostAndComments();
+//
+//        for (WallPost post : posts) {
+//            Hibernate.initialize(post.getImages());
+//
+//            if (post.getInnerPost() != null) {
+//                Hibernate.initialize(post.getInnerPost().getImages());
+//            }
+//            for (SimpleComment comment : post.getComments()) {
+//                Hibernate.initialize(comment.getImages());
+//                Hibernate.initialize(comment.getThreadComments());
+//
+//                for (ThreadComment threadComment : comment.getThreadComments()) {
+//                    Hibernate.initialize(threadComment.getImages());
+//                }
+//            }
+//        }
+        List<WallPost> postsWithInnerPost = repository.findAllWithInnerPost();
+        List<WallPost> postsWithComments = repository.findAllWithComments();
+
+        // Создаем мапу, чтобы быстро находить посты по id
+        Map<Long, WallPost> postMap = postsWithInnerPost.stream()
+                .collect(Collectors.toMap(WallPost::getWallPostId, post -> post));
+
+        // Объединяем комментарии в существующие объекты WallPost
+        for (WallPost postWithComments : postsWithComments) {
+            WallPost existingPost = postMap.get(postWithComments.getWallPostId());
+            if (existingPost != null) {
+                existingPost.setComments(postWithComments.getComments()); // Добавляем комментарии
+            }
+        }
+
+        return new ArrayList<>(postMap.values());
     }
 }

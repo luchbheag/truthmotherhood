@@ -3,8 +3,11 @@ package org.example.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,8 +30,9 @@ public class InnerPost {
     @OneToOne(mappedBy = "innerPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private WallPost wallPost;
     @OneToMany(mappedBy = "innerPost", cascade = CascadeType.ALL, orphanRemoval = true)
-//    @BatchSize(size = 10)
-    List<Image> images;
+    @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 10)
+    List<Image> images = new ArrayList<>();;
 
     @Override
     public String toString() {

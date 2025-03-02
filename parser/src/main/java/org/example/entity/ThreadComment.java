@@ -7,7 +7,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @Getter
 @SuperBuilder(toBuilder = true)
-public class ThreadComment extends SimpleComment {
+public class ThreadComment extends Comment {
     private Long threadStarterId;
     private Long userOfReply;
     private Long commentOfReply;

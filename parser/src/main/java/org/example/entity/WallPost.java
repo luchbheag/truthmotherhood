@@ -29,27 +29,42 @@ public class WallPost {
     String text;
     @Column
     LocalDateTime date;
-    @OneToMany(mappedBy = "wallPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "wallPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @BatchSize(size = 10)
-    List<Image> images = new ArrayList<>();;
-    @OneToMany(mappedBy = "wallPost", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Fetch(FetchMode.SUBSELECT)
+    List<Image> images = new ArrayList<>();
+    @OneToMany(mappedBy = "wallPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+//    @Fetch(FetchMode.SUBSELECT)
     @BatchSize(size = 10)
-    List<SimpleComment> comments = new ArrayList<>();;
+    List<SimpleComment> comments = new ArrayList<>();
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "inner_post_id",
             referencedColumnName = "inner_post_id",
             nullable = true)
     InnerPost innerPost;
 
-//    public void addComment(SimpleComment comment) {
-//        if (comments == null) {
-//            comments = new ArrayList<>();
-//        }
-//        comments.add(comment);
-//    }
-
     public boolean isEmpty() {
         return wallPostId == null;
+    }
+
+    public void setImages(List<Image> newImages) {
+        if (this.images != null) {
+            this.images.clear();
+        } else {
+            this.images = new ArrayList<>();
+        }
+        if (newImages != null) {
+            this.images.addAll(newImages);
+        }
+    }
+
+    public void setComments(List<SimpleComment> newSimpleComments) {
+        if (this.comments != null) {
+            this.comments.clear();
+        } else {
+            this.comments = new ArrayList<>();
+        }
+        if (newSimpleComments != null) {
+            this.comments.addAll(newSimpleComments);
+        }
     }
 }

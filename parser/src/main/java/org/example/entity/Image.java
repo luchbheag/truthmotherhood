@@ -24,9 +24,9 @@ public class Image {
     @ManyToOne
     @JoinColumn(name = "inner_post_id", nullable = true)
     private InnerPost innerPost;
-//    @ManyToOne
-//    @JoinColumn(name = "simple_comment_id", nullable = true)
-//    private SimpleComment simpleComment;
+    @ManyToOne
+    @JoinColumn(name = "simple_comment_id", nullable = true)
+    private SimpleComment simpleComment;
 
     @Override
     public String toString() {

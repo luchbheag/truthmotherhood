@@ -27,10 +27,10 @@ public class SimpleComment {
     LocalDateTime date;
 //    Long postId; // one-to-one
     String text;
-//    @OneToMany(mappedBy = "simpleComment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "simpleComment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 //    @Fetch(FetchMode.SUBSELECT)
-//    @BatchSize(size = 10)
-//    List<Image> images = new ArrayList<>();;
+    @BatchSize(size = 10)
+    List<Image> images = new ArrayList<>();;
     @ManyToOne
     @JoinColumn(name = "wall_post_id", nullable = false)
     WallPost wallPost;
@@ -43,10 +43,22 @@ public class SimpleComment {
         return "Comment [id = " + simpleCommentId
                 + ", userId = " + userId
                 + ", date = " + date
-                + ", text = " + text;
+                + ", text = " + text
+                + ", images = " + images;
     }
 
     public boolean isEmpty() {
         return simpleCommentId == null;
+    }
+
+    public void setImages(List<Image> newImages) {
+        if (this.images != null) {
+            this.images.clear();
+        } else {
+            this.images = new ArrayList<>();
+        }
+        if (newImages != null) {
+            this.images.addAll(newImages); // Добавляем новые элементы
+        }
     }
 }

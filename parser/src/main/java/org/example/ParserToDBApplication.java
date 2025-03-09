@@ -37,9 +37,7 @@ public class ParserToDBApplication {
                     saveWallPostWithRelations(post, repository);
                 }
             }
-            System.out.println(posts.size());
-
-            System.out.println("Post count: " + posts.size());
+            System.out.println("POSTS FROM PARSER: " + posts.size());
 //            saveAllWithRelations(posts, repository);
 //            repository.flush();
 //            repository.findAllWithImages().forEach(System.out::println);
@@ -57,6 +55,9 @@ public class ParserToDBApplication {
                     System.out.println(post.getInnerPost().getImages());
                 }
                 System.out.println(post.getComments().size());
+                if (post.getComments() != null) {
+                    post.getComments().forEach(System.out::println);
+                }
             });
             System.out.println("HERE IS FINE");
         };
@@ -89,11 +90,11 @@ public class ParserToDBApplication {
         }
         for (SimpleComment comment : post.getComments()) {
             comment.setWallPost(post);
-//            if (comment.isEmpty()) {
-//                for (Image image : comment.getImages()) {
-//                    image.setSimpleComment(comment);
-//                }
-//            }
+            if (!comment.isEmpty()) {
+                for (Image image : comment.getImages()) {
+                    image.setSimpleComment(comment);
+                }
+            }
         }
         repository.save(post);
     }

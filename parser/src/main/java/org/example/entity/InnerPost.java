@@ -29,10 +29,10 @@ public class InnerPost {
     private LocalDateTime date;
     @OneToOne(mappedBy = "innerPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private WallPost wallPost;
-    @OneToMany(mappedBy = "innerPost", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Fetch(FetchMode.SUBSELECT)
+    @OneToMany(mappedBy = "innerPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+//    @Fetch(FetchMode.SUBSELECT)
     @BatchSize(size = 10)
-    List<Image> images = new ArrayList<>();;
+    List<Image> images = new ArrayList<>();
 
     @Override
     public String toString() {
@@ -45,8 +45,14 @@ public class InnerPost {
         return innerPostId == null;
     }
 
-//    @Override
-//    public int hashCode() {
-//        return Objects.hash(id, text, date);
-//    }
+    public void setImages(List<Image> newImages) {
+        if (this.images != null) {
+            this.images.clear();
+        } else {
+            this.images = new ArrayList<>();
+        }
+        if (newImages != null) {
+            this.images.addAll(newImages); // Добавляем новые элементы
+        }
+    }
 }

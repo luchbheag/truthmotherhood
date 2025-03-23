@@ -36,7 +36,10 @@ public class SimpleComment {
     WallPost wallPost;
     // Think about: we can actually parse and store
     // to what user comment was sent in thread
-//    List<ThreadComment> threadComments;
+    @OneToMany(mappedBy = "simpleComment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+//    @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 10)
+    List<ThreadComment> threadComments;
 
     @Override
     public String toString() {
@@ -44,7 +47,8 @@ public class SimpleComment {
                 + ", userId = " + userId
                 + ", date = " + date
                 + ", text = " + text
-                + ", images = " + images;
+                + ", images = " + images
+                + ",\n threadComments = " + threadComments;
     }
 
     public boolean isEmpty() {
@@ -57,8 +61,15 @@ public class SimpleComment {
         } else {
             this.images = new ArrayList<>();
         }
-        if (newImages != null) {
-            this.images.addAll(newImages); // Добавляем новые элементы
+        this.images.addAll(newImages); // Добавляем новые элементы
+    }
+
+    public void setThreadComments(List<ThreadComment> newThreadComments) {
+        if (this.threadComments != null) {
+            this.threadComments.clear();
+        } else {
+            this.threadComments = new ArrayList<>();
         }
+        this.threadComments.addAll(newThreadComments); // Добавляем новые элементы
     }
 }

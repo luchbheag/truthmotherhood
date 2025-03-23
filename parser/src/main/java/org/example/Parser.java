@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 public class Parser {
@@ -28,7 +29,7 @@ public class Parser {
         WallPost post = null;
         try {
             WallPost.WallPostBuilder wallPostBuilder = WallPost.builder();
-            List<Image> images = new ArrayList<>();
+            LinkedHashSet<Image> images = new LinkedHashSet<>();
             List<SimpleComment> comments = new ArrayList<>();
             while (jParser.nextToken() != null && jParser.currentToken() != JsonToken.END_OBJECT) {
                 if (jParser.currentName() != null) {
@@ -47,10 +48,13 @@ public class Parser {
                             images = getImages(jParser);
                             break;
                         case "copy_history":
-                            InnerPost innerPost = getInnerPost(jParser);
-                            if (innerPost != null) {
-                                wallPostBuilder.innerPost(innerPost);
-                            }
+//                            InnerPost innerPost = getInnerPost(jParser);
+                            WallPost innerWallPost = getChildrenWallPost(jParser);
+//                            if (innerWallPost != null) {
+//                                System.out.println("Here is the child wallpost");
+//                                wallPostBuilder.childWallPost(innerWallPost);
+////                                wallPostBuilder.innerPost(innerPost);
+//                            }
                             break;
                         case "comms":
                             comments = getComments(jParser);
@@ -69,7 +73,7 @@ public class Parser {
             }
             post = wallPostBuilder.build();
             post.setImages(images);
-            post.setComments(comments);
+//            post.setComments(comments);
         } catch (IOException e) {
             e.printStackTrace();
             jParser.skipChildren();
@@ -77,25 +81,26 @@ public class Parser {
         return post;
     }
 
-    private InnerPost getInnerPost(JsonParser jParser) throws IOException {
-        // TODO: process other InnerPosts (can be multiple if it is repost of repost etc
-        InnerPost innerPost = null;
+    // TODO: for more than one, check structure
+    // TODO: probably can be recursive, there will be just no comments
+    private WallPost getChildrenWallPost(JsonParser jParser) throws IOException {
+        WallPost innerWallPost = null;
         try {
-            InnerPost.InnerPostBuilder innerPostBuilder = InnerPost.builder();
-            List<Image> images = new ArrayList<>();
+            WallPost.WallPostBuilder innerWallPostBuilder = WallPost.builder();
+            LinkedHashSet<Image> images = new LinkedHashSet<>();
             jParser.nextToken();
             jParser.nextToken();
             jParser.nextToken();
             while (!(jParser.currentToken() == JsonToken.END_OBJECT)) {
                 switch (jParser.currentName()) {
                     case "id":
-                        innerPostBuilder.innerPostId(getLongValue(jParser));
+                        innerWallPostBuilder.wallPostId(getLongValue(jParser));
                         break;
                     case "text":
-                        innerPostBuilder.text(jParser.getText());
+                        innerWallPostBuilder.text(jParser.getText());
                         break;
                     case "date":
-                        innerPostBuilder.date(getDateTime(getLongValue(jParser)));
+                        innerWallPostBuilder.date(getDateTime(getLongValue(jParser)));
                         break;
                     case "attachments":
                         images = getImages(jParser);
@@ -110,14 +115,56 @@ public class Parser {
             }
             jParser.nextToken();
             jParser.nextToken();
-            innerPost = innerPostBuilder.build();
-            innerPost.setImages(images);
+            innerWallPost = innerWallPostBuilder.build();
+            innerWallPost.setImages(images);
         } catch (IOException e) {
             e.printStackTrace();
             jParser.skipChildren(); // bad ones
         }
-        return innerPost;
+        return innerWallPost;
     }
+
+//    private InnerPost getInnerPost(JsonParser jParser) throws IOException {
+//        // TODO: process other InnerPosts (can be multiple if it is repost of repost etc
+//        InnerPost innerPost = null;
+//        try {
+//            InnerPost.InnerPostBuilder innerPostBuilder = InnerPost.builder();
+//            List<Image> images = new ArrayList<>();
+//            jParser.nextToken();
+//            jParser.nextToken();
+//            jParser.nextToken();
+//            while (!(jParser.currentToken() == JsonToken.END_OBJECT)) {
+//                switch (jParser.currentName()) {
+//                    case "id":
+//                        innerPostBuilder.innerPostId(getLongValue(jParser));
+//                        break;
+//                    case "text":
+//                        innerPostBuilder.text(jParser.getText());
+//                        break;
+//                    case "date":
+//                        innerPostBuilder.date(getDateTime(getLongValue(jParser)));
+//                        break;
+//                    case "attachments":
+//                        images = getImages(jParser);
+//                        break;
+//                    case "post_source":
+//                        jParser.nextToken();
+//                        jParser.skipChildren();
+//                        jParser.nextToken();
+//                        break;
+//                }
+//                jParser.nextToken();
+//            }
+//            jParser.nextToken();
+//            jParser.nextToken();
+//            innerPost = innerPostBuilder.build();
+//            innerPost.setImages(images);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            jParser.skipChildren(); // bad ones
+//        }
+//        return innerPost;
+//    }
 
     private List<SimpleComment> getComments(JsonParser jParser) throws IOException {
         List<SimpleComment> comments = new ArrayList<>();
@@ -162,7 +209,8 @@ public class Parser {
                             commentBuilder.date(getDateTime(getLongValue(jParser)));
                             break;
                         case "attachments":
-                            images = getImages(jParser);
+                            getImages(jParser);
+                            //images = getImages(jParser);
                             break;
 //                        case "post_id":
 //                            jParser.nextToken();
@@ -217,14 +265,14 @@ public class Parser {
 
     private ThreadComment getThreadComment(JsonParser jParser) throws IOException {
         ThreadComment comment = null;
-        ThreadComment.ThreadCommentBuilder<?, ?> commentBuilder = ThreadComment.builder();
+        ThreadComment.ThreadCommentBuilder commentBuilder = ThreadComment.builder();
         try {
             while (!(jParser.currentToken() == JsonToken.END_OBJECT
                     && jParser.currentName() == null)) {
                 if (jParser.currentName() != null) {
                     switch (jParser.currentName()) {
                         case "id":
-                            commentBuilder.id(getLongValue(jParser));
+                            commentBuilder.threadCommentId(getLongValue(jParser));
                             break;
                         case "text":
                             jParser.nextToken();
@@ -234,14 +282,16 @@ public class Parser {
                             commentBuilder.userId(getLongValue(jParser));
                             break;
                         case "post_id":
-                            commentBuilder.postId(getLongValue(jParser));
+//                            commentBuilder.postId(getLongValue(jParser));
+                            getLongValue(jParser);
                             break;
                         case "date":
                             commentBuilder.date(getDateTime(getLongValue(jParser)));
                             break;
                         case "parents_stack":
                             jParser.nextToken();
-                            commentBuilder.threadStarterId(getLongValue(jParser));
+//                            commentBuilder.threadStarterId(getLongValue(jParser));
+                            getLongValue(jParser);
                             jParser.nextToken();
                             break;
                         case "reply_to_user":
@@ -258,7 +308,8 @@ public class Parser {
                             commentBuilder.commentOfReply(jParser.getLongValue());
                             break;
                         case "attachments":
-                            commentBuilder.images(getImages(jParser));
+//                            commentBuilder.images(getImages(jParser));
+                            getImages(jParser);
                             break;
                     }
                 }
@@ -272,8 +323,8 @@ public class Parser {
         return comment;
     }
 
-    private List<Image> getImages(JsonParser jParser) throws IOException {
-        List<Image> images = new ArrayList<>();
+    private LinkedHashSet<Image> getImages(JsonParser jParser) throws IOException {
+        LinkedHashSet<Image> images = new LinkedHashSet<>();
         jParser.nextToken();
         jParser.nextToken();
         while (!(jParser.currentToken() == JsonToken.END_ARRAY
@@ -283,6 +334,9 @@ public class Parser {
                     && "photo".equals(jParser.currentName())) {
                 images.add(getImage(jParser));
             }
+        }
+        if (!images.isEmpty()) {
+            System.out.println("NOT EMPTY");
         }
         return images;
     }

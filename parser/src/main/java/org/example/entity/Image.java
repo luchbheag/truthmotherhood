@@ -21,9 +21,9 @@ public class Image {
     @ManyToOne
     @JoinColumn(name = "wall_post_id", nullable = true)
     private WallPost wallPost;
-    @ManyToOne
-    @JoinColumn(name = "inner_post_id", nullable = true)
-    private InnerPost innerPost;
+//    @ManyToOne
+//    @JoinColumn(name = "inner_post_id", nullable = true)
+//    private InnerPost innerPost;
     @ManyToOne
     @JoinColumn(name = "simple_comment_id", nullable = true)
     private SimpleComment simpleComment;
@@ -34,6 +34,7 @@ public class Image {
 //                + ", post_id=" + postId
                 + ", height=" + height
                 + ", width=" + width
-                + ", url=" + url + "]";
+                + ", url=" + url
+                + ", wallPost=" + (wallPost == null ? "-" : wallPost.getWallPostId()) + "]";
     }
 }

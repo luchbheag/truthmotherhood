@@ -10,7 +10,9 @@ import org.hibernate.annotations.FetchMode;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Entity
@@ -18,7 +20,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-@ToString(exclude = {"innerPost"})
+@ToString()
 @NoArgsConstructor
 @AllArgsConstructor
 public class WallPost {
@@ -29,42 +31,47 @@ public class WallPost {
     String text;
     @Column
     LocalDateTime date;
-    @OneToMany(mappedBy = "wallPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @BatchSize(size = 10)
-    List<Image> images = new ArrayList<>();
-    @OneToMany(mappedBy = "wallPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToOne//(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "parent_id")
+    WallPost parentWallPost;
+    @OneToOne(mappedBy = "parentWallPost", cascade = CascadeType.ALL)
+    WallPost childWallPost;
+    @OneToMany(mappedBy = "wallPost", cascade = CascadeType.PERSIST, orphanRemoval = true)
+//    @BatchSize(size = 10)
+    Set<Image> images = new LinkedHashSet<>();
+//    @OneToMany(mappedBy = "wallPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 //    @Fetch(FetchMode.SUBSELECT)
-    @BatchSize(size = 10)
-    List<SimpleComment> comments = new ArrayList<>();
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "inner_post_id",
-            referencedColumnName = "inner_post_id",
-            nullable = true)
-    InnerPost innerPost;
+//    @BatchSize(size = 10)
+//    List<SimpleComment> comments = new ArrayList<>();
+//    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+//    @JoinColumn(name = "inner_post_id",
+//            referencedColumnName = "inner_post_id",
+//            nullable = true)
+//    InnerPost innerPost;
 
     public boolean isEmpty() {
         return wallPostId == null;
     }
 
-    public void setImages(List<Image> newImages) {
-        if (this.images != null) {
-            this.images.clear();
-        } else {
-            this.images = new ArrayList<>();
-        }
-        if (newImages != null) {
-            this.images.addAll(newImages);
-        }
-    }
-
-    public void setComments(List<SimpleComment> newSimpleComments) {
-        if (this.comments != null) {
-            this.comments.clear();
-        } else {
-            this.comments = new ArrayList<>();
-        }
-        if (newSimpleComments != null) {
-            this.comments.addAll(newSimpleComments);
-        }
-    }
+//    public void setImages(List<Image> newImages) {
+//        if (this.images != null) {
+//            this.images.clear();
+//        } else {
+//            this.images = new ArrayList<>();
+//        }
+//        if (newImages != null) {
+//            this.images.addAll(newImages);
+//        }
+//    }
+//
+//    public void setComments(List<SimpleComment> newSimpleComments) {
+//        if (this.comments != null) {
+//            this.comments.clear();
+//        } else {
+//            this.comments = new ArrayList<>();
+//        }
+//        if (newSimpleComments != null) {
+//            this.comments.addAll(newSimpleComments);
+//        }
+//    }
 }

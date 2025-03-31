@@ -28,6 +28,12 @@ public class ParserCommandLineRunner implements CommandLineRunner {
             WallPost post = parser.parseWallPost();
             if (!(post == null || post.isEmpty())) {
                 posts.add(post);
+                if (!post.getImages().isEmpty()) {
+                    System.out.println("!!" + post.getImages());
+                }
+                if (!post.getInnerPosts().isEmpty()) {
+                    System.out.println("\uD83D\uDD25 " + post.getInnerPosts());
+                }
                 wallPostService.save(post);
             }
         }
@@ -38,6 +44,9 @@ public class ParserCommandLineRunner implements CommandLineRunner {
         System.out.println("Posts from DB: " + postsFromDb.size());
         for (WallPost post : postsFromDb) {
             System.out.println(post.getWallPostId());
+            if (!post.getImages().isEmpty()) {
+                System.out.println("!!" + post.getImages());
+            }
         }
 
         System.out.println("END EXECUTION");

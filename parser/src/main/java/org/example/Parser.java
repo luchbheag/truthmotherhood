@@ -29,7 +29,8 @@ public class Parser {
         WallPost post = null;
         try {
             WallPost.WallPostBuilder wallPostBuilder = WallPost.builder();
-            LinkedHashSet<Image> images = new LinkedHashSet<>();
+            List<Image> images = new ArrayList<>();
+            List<InnerPost> innerPosts = new ArrayList<>();
             List<SimpleComment> comments = new ArrayList<>();
             while (jParser.nextToken() != null && jParser.currentToken() != JsonToken.END_OBJECT) {
                 if (jParser.currentName() != null) {
@@ -46,15 +47,16 @@ public class Parser {
                             break;
                         case "attachments":
                             images = getImages(jParser);
+//                            if (!images.isEmpty()) {
+//                                System.out.println("IMAGES NOT EMPTY ");
+//                                System.out.println(images);
+//                            }
                             break;
                         case "copy_history":
-//                            InnerPost innerPost = getInnerPost(jParser);
-                            WallPost innerWallPost = getChildrenWallPost(jParser);
-//                            if (innerWallPost != null) {
-//                                System.out.println("Here is the child wallpost");
-//                                wallPostBuilder.childWallPost(innerWallPost);
-////                                wallPostBuilder.innerPost(innerPost);
-//                            }
+                            innerPosts = getInnerPosts(jParser);
+                            if (!innerPosts.isEmpty()) {
+                                System.out.println("Here is the children wallposts");
+                            }
                             break;
                         case "comms":
                             comments = getComments(jParser);
@@ -73,6 +75,7 @@ public class Parser {
             }
             post = wallPostBuilder.build();
             post.setImages(images);
+            post.setInnerPosts(innerPosts);
 //            post.setComments(comments);
         } catch (IOException e) {
             e.printStackTrace();
@@ -81,90 +84,65 @@ public class Parser {
         return post;
     }
 
+    private List<InnerPost> getInnerPosts(JsonParser jParser) throws IOException {
+        List<InnerPost> innerPosts = new ArrayList<>();
+
+        jParser.nextToken();
+        while(!(jParser.currentToken() == JsonToken.END_ARRAY
+                && "copy_history".equals(jParser.currentName()))) {
+            if (jParser.currentToken() == JsonToken.START_OBJECT
+                    && jParser.currentName() == null) {
+                InnerPost innerPost = getInnerPost(jParser);
+                if (innerPost != null) {
+                    innerPosts.add(innerPost);
+                }
+            }
+            jParser.nextToken();
+        };
+        return innerPosts;
+    }
+
     // TODO: for more than one, check structure
     // TODO: probably can be recursive, there will be just no comments
-    private WallPost getChildrenWallPost(JsonParser jParser) throws IOException {
-        WallPost innerWallPost = null;
+    private InnerPost getInnerPost(JsonParser jParser) throws IOException {
+        // TODO: process other InnerPosts (can be multiple if it is repost of repost etc
+        InnerPost innerPost = null;
         try {
-            WallPost.WallPostBuilder innerWallPostBuilder = WallPost.builder();
-            LinkedHashSet<Image> images = new LinkedHashSet<>();
-            jParser.nextToken();
-            jParser.nextToken();
-            jParser.nextToken();
-            while (!(jParser.currentToken() == JsonToken.END_OBJECT)) {
-                switch (jParser.currentName()) {
-                    case "id":
-                        innerWallPostBuilder.wallPostId(getLongValue(jParser));
-                        break;
-                    case "text":
-                        innerWallPostBuilder.text(jParser.getText());
-                        break;
-                    case "date":
-                        innerWallPostBuilder.date(getDateTime(getLongValue(jParser)));
-                        break;
-                    case "attachments":
-                        images = getImages(jParser);
-                        break;
-                    case "post_source":
-                        jParser.nextToken();
-                        jParser.skipChildren();
-                        jParser.nextToken();
-                        break;
+            InnerPost.InnerPostBuilder innerPostBuilder = InnerPost.builder();
+            List<Image> images = new ArrayList<>();
+            while (!(jParser.currentToken() == JsonToken.END_OBJECT
+                    && jParser.currentName() == null)) {
+                if (jParser.currentName() != null) {
+                    switch (jParser.currentName()) {
+                        case "id":
+                            innerPostBuilder.innerPostId(getLongValue(jParser));
+                            break;
+                        case "text":
+                            innerPostBuilder.text(jParser.getText());
+                            break;
+                        case "date":
+                            innerPostBuilder.date(getDateTime(getLongValue(jParser)));
+                            break;
+                        case "attachments":
+                            images = getImages(jParser);
+                            break;
+                        case "post_source":
+                            jParser.nextToken();
+                            jParser.skipChildren();
+                            jParser.nextToken();
+                            break;
+                    }
                 }
                 jParser.nextToken();
             }
-            jParser.nextToken();
-            jParser.nextToken();
-            innerWallPost = innerWallPostBuilder.build();
-            innerWallPost.setImages(images);
+            innerPost = innerPostBuilder.build();
+            innerPost.setImages(images);
         } catch (IOException e) {
             e.printStackTrace();
             jParser.skipChildren(); // bad ones
         }
-        return innerWallPost;
+        return innerPost;
     }
-
-//    private InnerPost getInnerPost(JsonParser jParser) throws IOException {
-//        // TODO: process other InnerPosts (can be multiple if it is repost of repost etc
-//        InnerPost innerPost = null;
-//        try {
-//            InnerPost.InnerPostBuilder innerPostBuilder = InnerPost.builder();
-//            List<Image> images = new ArrayList<>();
-//            jParser.nextToken();
-//            jParser.nextToken();
-//            jParser.nextToken();
-//            while (!(jParser.currentToken() == JsonToken.END_OBJECT)) {
-//                switch (jParser.currentName()) {
-//                    case "id":
-//                        innerPostBuilder.innerPostId(getLongValue(jParser));
-//                        break;
-//                    case "text":
-//                        innerPostBuilder.text(jParser.getText());
-//                        break;
-//                    case "date":
-//                        innerPostBuilder.date(getDateTime(getLongValue(jParser)));
-//                        break;
-//                    case "attachments":
-//                        images = getImages(jParser);
-//                        break;
-//                    case "post_source":
-//                        jParser.nextToken();
-//                        jParser.skipChildren();
-//                        jParser.nextToken();
-//                        break;
-//                }
-//                jParser.nextToken();
-//            }
-//            jParser.nextToken();
-//            jParser.nextToken();
-//            innerPost = innerPostBuilder.build();
-//            innerPost.setImages(images);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            jParser.skipChildren(); // bad ones
-//        }
-//        return innerPost;
-//    }
 
     private List<SimpleComment> getComments(JsonParser jParser) throws IOException {
         List<SimpleComment> comments = new ArrayList<>();
@@ -323,8 +301,8 @@ public class Parser {
         return comment;
     }
 
-    private LinkedHashSet<Image> getImages(JsonParser jParser) throws IOException {
-        LinkedHashSet<Image> images = new LinkedHashSet<>();
+    private List<Image> getImages(JsonParser jParser) throws IOException {
+        List<Image> images = new ArrayList<>();
         jParser.nextToken();
         jParser.nextToken();
         while (!(jParser.currentToken() == JsonToken.END_ARRAY
@@ -334,9 +312,6 @@ public class Parser {
                     && "photo".equals(jParser.currentName())) {
                 images.add(getImage(jParser));
             }
-        }
-        if (!images.isEmpty()) {
-            System.out.println("NOT EMPTY");
         }
         return images;
     }

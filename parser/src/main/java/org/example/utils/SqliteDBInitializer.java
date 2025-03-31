@@ -15,15 +15,26 @@ public class SqliteDBInitializer {
     }
 
     @PostConstruct
-    public void createTable() {
-        String sql = """
+    public void createTables() {
+        String sqlWallPosts = """
                 CREATE TABLE IF NOT EXISTS wall_posts (
                     wall_post_id INTEGER PRIMARY KEY,
                     text TEXT NOT NULL,
                     date TEXT NOT NULL
                 )
                 """;
-        jdbcTemplate.execute(sql);
-        System.out.println("INFO: wall_posts table created");
+        String sqlImages = """
+                CREATE TABLE IF NOT EXISTS images (
+                    image_id INTEGER PRIMARY KEY,
+                    height INTEGER NOT NULL,
+                    width INTEGER NOT NULL,
+                    url TEXT NOT NULL,
+                    wall_post_id INTEGER NULL
+                )
+                """;
+        jdbcTemplate.execute(sqlWallPosts);
+        System.out.println("INFO: wall_posts table was created");
+        jdbcTemplate.execute(sqlImages);
+        System.out.println("INFO: images table was created");
     }
 }

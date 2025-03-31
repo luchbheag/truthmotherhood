@@ -1,0 +1,69 @@
+package org.example.dao;
+
+import org.example.entity.Image;
+import org.example.entity.WallPost;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowCallbackHandler;
+import org.springframework.stereotype.Repository;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+@Repository
+public class ImageDao {
+    private final static String ADD_IMAGE_BY_WALL_POST_SQL = "INSERT OR IGNORE INTO images (image_id, height, width, url, wall_post_id) VALUES(?,?,?,?,?)";
+    private final static String SELECT_ALL_IMAGES_BY_WALL_POST_SQL = "SELECT image_id, height, width, url, wall_post_id FROM images WHERE wall_post_id = ?";
+    private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_WALL_POSTS_SQL = "SELECT image_id, height, width, url, wall_post_id FROM images WHERE wall_post_id IN (%s)";
+
+    private final JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    public ImageDao(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public void saveByWallPostId(long wallPostId, Image image) {
+        System.out.println("UPDATE images TABLE");
+        jdbcTemplate.update(
+                ADD_IMAGE_BY_WALL_POST_SQL,
+                image.getId(),
+                image.getHeight(),
+                image.getWidth(),
+                image.getUrl(),
+                wallPostId
+        );
+    }
+
+    public List<Image> findAllByPostId(Long wallPostId) {
+        return jdbcTemplate.query(
+                SELECT_ALL_IMAGES_BY_WALL_POST_SQL,
+                (resultSet, rowNum) -> mapImage(resultSet),
+                List.of(wallPostId).toArray()
+        );
+    }
+
+    public List<Image> findAllByMultiplePostIds(List<Long> wallPostIds) {
+        String inSql = String.join(",", Collections.nCopies(wallPostIds.size(), "?"));
+        String selectQueryStr = String.format(SELECT_ALL_IMAGES_BY_MULTIPLE_WALL_POSTS_SQL, inSql);
+
+        return jdbcTemplate.query(
+                selectQueryStr,
+                (resultSet, rowNum) -> mapImage(resultSet),
+                wallPostIds.toArray()
+        );
+    }
+
+    private Image mapImage(ResultSet rs) throws SQLException {
+        return new Image(
+                rs.getLong("image_id"),
+                rs.getInt("height"),
+                rs.getInt("width"),
+                rs.getString("url"),
+                rs.getLong("wall_post_id")
+        );
+    }
+}

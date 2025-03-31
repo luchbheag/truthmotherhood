@@ -14,6 +14,8 @@ public class Image {
     private Integer width;
     private String url;
     private Long wallPostId;
+    private Long innerPostId;
+    private Long commentId;
 
     @Override
     public String toString() {

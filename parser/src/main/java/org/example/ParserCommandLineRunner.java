@@ -47,6 +47,9 @@ public class ParserCommandLineRunner implements CommandLineRunner {
             if (!post.getImages().isEmpty()) {
                 System.out.println("!!" + post.getImages());
             }
+            if (!post.getInnerPosts().isEmpty()) {
+                System.out.println("✅" + post.getInnerPosts());
+            }
         }
 
         System.out.println("END EXECUTION");

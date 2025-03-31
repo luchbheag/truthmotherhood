@@ -2,10 +2,8 @@ package org.example.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Entity
@@ -36,7 +34,7 @@ public class ThreadComment {
     private Long commentOfReply; // TODO: make it entity? threadComment
     @ManyToOne
     @JoinColumn(name = "simple_comment_id", nullable = true)
-    SimpleComment simpleComment;
+    Comment comment;
 
     @Override
     public String toString() {

@@ -9,15 +9,16 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 @Repository
 public class ImageDao {
-    private final static String ADD_IMAGE_BY_WALL_POST_SQL = "INSERT OR IGNORE INTO images (image_id, height, width, url, wall_post_id) VALUES(?,?,?,?,?)";
-    private final static String SELECT_ALL_IMAGES_BY_WALL_POST_SQL = "SELECT image_id, height, width, url, wall_post_id FROM images WHERE wall_post_id = ?";
-    private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_WALL_POSTS_SQL = "SELECT image_id, height, width, url, wall_post_id FROM images WHERE wall_post_id IN (%s)";
+    private final static String ADD_IMAGE_BY_WALL_POST_SQL = "INSERT OR IGNORE INTO images (image_id, height, width, url, wall_post_id, inner_post_id) VALUES(?,?,?,?,?,?)";
+    private final static String SELECT_ALL_IMAGES_BY_WALL_POST_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id FROM images WHERE wall_post_id = ?";
+    private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_WALL_POSTS_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, comment_id FROM images WHERE wall_post_id IN (%s)";
+    private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_INNER_POSTS_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, comment_id FROM images WHERE inner_post_id IN (%s)";
+    private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_COMMENTS_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, comment_id FROM images WHERE comment_id IN (%s)";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -26,7 +27,7 @@ public class ImageDao {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public void saveByWallPostId(long wallPostId, Image image) {
+    public void save(Image image) {
         System.out.println("UPDATE images TABLE");
         jdbcTemplate.update(
                 ADD_IMAGE_BY_WALL_POST_SQL,
@@ -34,7 +35,8 @@ public class ImageDao {
                 image.getHeight(),
                 image.getWidth(),
                 image.getUrl(),
-                wallPostId
+                image.getWallPostId(),
+                image.getInnerPostId()
         );
     }
 
@@ -46,7 +48,7 @@ public class ImageDao {
         );
     }
 
-    public List<Image> findAllByMultiplePostIds(List<Long> wallPostIds) {
+    public List<Image> findAllByMultipleWallPostIds(List<Long> wallPostIds) {
         String inSql = String.join(",", Collections.nCopies(wallPostIds.size(), "?"));
         String selectQueryStr = String.format(SELECT_ALL_IMAGES_BY_MULTIPLE_WALL_POSTS_SQL, inSql);
 
@@ -57,13 +59,37 @@ public class ImageDao {
         );
     }
 
+    public List<Image> findAllByMultipleInnerPostIds(List<Long> innerPostIds) {
+        String inSql = String.join(",", Collections.nCopies(innerPostIds.size(), "?"));
+        String selectQueryStr = String.format(SELECT_ALL_IMAGES_BY_MULTIPLE_INNER_POSTS_SQL, inSql);
+
+        return jdbcTemplate.query(
+                selectQueryStr,
+                (resultSet, rowNum) -> mapImage(resultSet),
+                innerPostIds.toArray()
+        );
+    }
+
+    public List<Image> findAllByMultipleCommentIds(List<Long> commentIds) {
+        String inSql = String.join(",", Collections.nCopies(commentIds.size(), "?"));
+        String selectQueryStr = String.format(SELECT_ALL_IMAGES_BY_MULTIPLE_COMMENTS_SQL, inSql);
+
+        return jdbcTemplate.query(
+                selectQueryStr,
+                (resultSet, rowNum) -> mapImage(resultSet),
+                commentIds.toArray()
+        );
+    }
+
     private Image mapImage(ResultSet rs) throws SQLException {
         return new Image(
                 rs.getLong("image_id"),
                 rs.getInt("height"),
                 rs.getInt("width"),
                 rs.getString("url"),
-                rs.getLong("wall_post_id")
+                rs.getLong("wall_post_id"),
+                rs.getLong("inner_post_id"),
+                rs.getLong("comment_id")
         );
     }
 }

@@ -18,10 +18,10 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public void saveAllByWallPostId(long wallPostId, List<Image> images) {
+    public void saveAll(List<Image> images) {
         System.out.println("TRY TO SAVE ALL IMAGES WITH DAO");
         for (Image image : images) {
-            imageDao.saveByWallPostId(wallPostId, image);
+            imageDao.save(image);
         }
     }
 
@@ -32,6 +32,16 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public List<Image> findAllByMultipleWallPostIds(List<Long> wallPostIds) {
-        return imageDao.findAllByMultiplePostIds(wallPostIds);
+        return imageDao.findAllByMultipleWallPostIds(wallPostIds);
+    }
+
+    @Override
+    public List<Image> findAllByMultipleInnerPostIds(List<Long> innerPostIds) {
+        return imageDao.findAllByMultipleInnerPostIds(innerPostIds);
+    }
+
+    @Override
+    public List<Image> findAllByMultipleCommentIds(List<Long> commentIds) {
+        return imageDao.findAllByMultipleCommentIds(commentIds);
     }
 }

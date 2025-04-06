@@ -46,14 +46,6 @@ public class SqliteDBInitializer {
                     wall_post_id INTEGER NOT NULL
                 )
                 """;
-//        Long simpleCommentId;
-//        Long userId;
-//        LocalDateTime date;
-//        String text;
-//        List<Image> images;
-//        Long wallPostId;
-//        Long threadStarterId;
-//        Long commentToAnswerId;
         String sqlComments = """
                 CREATE TABLE IF NOT EXISTS comments (
                     comment_id INTEGER PRIMARY KEY,

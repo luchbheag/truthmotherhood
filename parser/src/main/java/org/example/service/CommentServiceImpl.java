@@ -3,7 +3,6 @@ package org.example.service;
 import org.example.dao.CommentDao;
 import org.example.entity.Comment;
 import org.example.entity.Image;
-import org.example.entity.InnerPost;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,8 +34,12 @@ public class CommentServiceImpl implements CommentService{
     @Override
     public List<Comment> findAllByPostId(Long wallPostId) {
         List<Comment> comments = commentDao.findAllByWallPostId(wallPostId);
+//        System.out.println("Comments from DAO: " + comments.size());
         List<Long> commentIds = comments.stream().map(Comment::getCommentId).toList();
-        Map<Long, List<Image>> commentImagesMap = getImagesForCommets(commentIds);
+        Map<Long, List<Image>> commentImagesMap = getImagesForComments(commentIds);
+        System.out.println();
+        System.out.println(commentImagesMap);
+        System.out.println();
 
         for (Comment comment : comments) {
             comment.setImages(commentImagesMap.getOrDefault(comment.getCommentId(), new ArrayList<>()));
@@ -45,10 +48,16 @@ public class CommentServiceImpl implements CommentService{
         return comments;
     }
 
-    private Map<Long, List<Image>> getImagesForCommets(List<Long> commentsIds) {
+    @Override
+    public int countAllCommentsInTable() {
+        return commentDao.countAllCommentsInTable();
+    }
+
+    private Map<Long, List<Image>> getImagesForComments(List<Long> commentsIds) {
+        System.out.println(imageService.findAllByMultipleCommentIds(commentsIds));
 
         return imageService.findAllByMultipleCommentIds(commentsIds)
                 .stream()
-                .collect(Collectors.groupingBy(Image::getInnerPostId));
+                .collect(Collectors.groupingBy(Image::getCommentId));
     }
 }

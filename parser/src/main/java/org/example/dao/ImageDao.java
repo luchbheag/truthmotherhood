@@ -14,7 +14,7 @@ import java.util.List;
 
 @Repository
 public class ImageDao {
-    private final static String ADD_IMAGE_BY_WALL_POST_SQL = "INSERT OR IGNORE INTO images (image_id, height, width, url, wall_post_id, inner_post_id) VALUES(?,?,?,?,?,?)";
+    private final static String ADD_IMAGE_SQL = "INSERT OR IGNORE INTO images (image_id, height, width, url, wall_post_id, inner_post_id, comment_id) VALUES(?,?,?,?,?,?,?)";
     private final static String SELECT_ALL_IMAGES_BY_WALL_POST_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id FROM images WHERE wall_post_id = ?";
     private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_WALL_POSTS_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, comment_id FROM images WHERE wall_post_id IN (%s)";
     private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_INNER_POSTS_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, comment_id FROM images WHERE inner_post_id IN (%s)";
@@ -28,15 +28,15 @@ public class ImageDao {
     }
 
     public void save(Image image) {
-        System.out.println("UPDATE images TABLE");
         jdbcTemplate.update(
-                ADD_IMAGE_BY_WALL_POST_SQL,
+                ADD_IMAGE_SQL,
                 image.getId(),
                 image.getHeight(),
                 image.getWidth(),
                 image.getUrl(),
                 image.getWallPostId(),
-                image.getInnerPostId()
+                image.getInnerPostId(),
+                image.getCommentId()
         );
     }
 

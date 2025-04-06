@@ -47,16 +47,9 @@ public class Parser {
                             break;
                         case "attachments":
                             images = getImages(jParser);
-//                            if (!images.isEmpty()) {
-//                                System.out.println("IMAGES NOT EMPTY ");
-//                                System.out.println(images);
-//                            }
                             break;
                         case "copy_history":
                             innerPosts = getInnerPosts(jParser);
-                            if (!innerPosts.isEmpty()) {
-                                System.out.println("Here is the children wallposts");
-                            }
                             break;
                         case "comms":
                             comments = getComments(jParser);
@@ -82,7 +75,7 @@ public class Parser {
                 setWallPostIdForInnerPosts(post.getWallPostId(), innerPosts);
             }
             post.setInnerPosts(innerPosts);
-//            post.setComments(comments);
+            post.setComments(comments); // TODO: set comment_id in images
         } catch (IOException e) {
             e.printStackTrace();
             jParser.skipChildren();
@@ -161,17 +154,17 @@ public class Parser {
                 && "comms".equals(jParser.currentName()))) {
             if (jParser.currentToken() == JsonToken.START_OBJECT
             && jParser.currentName() == null) {
-                Comment comment = getComment(jParser);
-                if (comment != null) {
-                    comments.add(comment);
-                }
+                getComment(jParser, comments);
+//                if (comment != null) {
+//                    comments.add(comment);
+//                }
             }
             jParser.nextToken();
         };
         return comments;
     }
 
-    private Comment getComment(JsonParser jParser) {
+    private void getComment(JsonParser jParser, List<Comment> comments) {
         Comment comment = null;
         try {
             Comment.CommentBuilder commentBuilder = Comment.builder();
@@ -208,21 +201,25 @@ public class Parser {
                             break;
                         case "thread":
                             jParser.nextToken();
-                            getThreadComments(jParser);
+                            thread = getThreadComments(jParser);
                             break;
                     }
                 }
                 jParser.nextToken();
             }
             comment = commentBuilder.build();
+            if (!images.isEmpty()) {
+                setCommentIdForImages(comment.getCommentId(), images);
+            }
             comment.setImages(images);
+            comments.add(comment);
+            comments.addAll(thread);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return comment;
     }
 
-    List<Comment> getThreadComments(JsonParser jParser) throws IOException {
+    private List<Comment> getThreadComments(JsonParser jParser) throws IOException {
         List<Comment> threadComments = new ArrayList<>();
         jParser.nextToken();
         while (!(jParser.currentToken() == JsonToken.VALUE_NUMBER_INT
@@ -278,8 +275,7 @@ public class Parser {
                             break;
                         case "parents_stack":
                             jParser.nextToken();
-//                            commentBuilder.threadStarterId(getLongValue(jParser));
-                            getLongValue(jParser);
+                            commentBuilder.threadStarterId(getLongValue(jParser));
                             jParser.nextToken();
                             break;
                         case "reply_to_user":
@@ -303,6 +299,10 @@ public class Parser {
                 jParser.nextToken();
             }
             comment = commentBuilder.build();
+            if (!images.isEmpty()) {
+                setCommentIdForImages(comment.getCommentId(), images);
+            }
+            comment.setImages(images);
         } catch (IOException e) {
             e.printStackTrace();
             jParser.skipChildren();
@@ -416,7 +416,7 @@ public class Parser {
         images.forEach(image -> image.setInnerPostId(innerPostId));
     }
 
-//    private void setCommentIdForImages(Long commentId, List<Image> images) {
-//        images.forEach(image -> image.setInnerPostId(innerPostId));
-//    }
+    private void setCommentIdForImages(Long commentId, List<Image> images) {
+        images.forEach(image -> image.setCommentId(commentId));
+    }
 }

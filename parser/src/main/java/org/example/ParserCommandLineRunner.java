@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.entity.Comment;
 import org.example.entity.WallPost;
 import org.example.service.WallPostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,7 @@ import java.util.List;
 @Component
 public class ParserCommandLineRunner implements CommandLineRunner {
 
-    private WallPostService wallPostService;
+    private final WallPostService wallPostService;
 
     @Autowired
     public ParserCommandLineRunner(WallPostService wallPostService) {
@@ -28,11 +29,15 @@ public class ParserCommandLineRunner implements CommandLineRunner {
             WallPost post = parser.parseWallPost();
             if (!(post == null || post.isEmpty())) {
                 posts.add(post);
-                if (!post.getImages().isEmpty()) {
-                    System.out.println("!!" + post.getImages());
-                }
-                if (!post.getInnerPosts().isEmpty()) {
-                    System.out.println("\uD83D\uDD25 " + post.getInnerPosts());
+//                if (!post.getImages().isEmpty()) {
+//                    System.out.println("!!" + post.getImages());
+//                }
+//                if (!post.getInnerPosts().isEmpty()) {
+//                    System.out.println("\uD83D\uDD25 " + post.getInnerPosts());
+//                }
+                if (!post.getComments().isEmpty()) {
+//                    System.out.println("\uD83D\uDC1D");
+                    post.getComments().forEach(Comment::printIdAndAmountOfImages);
                 }
                 wallPostService.save(post);
             }
@@ -41,14 +46,20 @@ public class ParserCommandLineRunner implements CommandLineRunner {
 
         List<WallPost> postsFromDb = wallPostService.findAll();
 
+        System.out.println();
+        System.out.println();
+        System.out.println();
         System.out.println("Posts from DB: " + postsFromDb.size());
         for (WallPost post : postsFromDb) {
             System.out.println(post.getWallPostId());
-            if (!post.getImages().isEmpty()) {
-                System.out.println("!!" + post.getImages());
-            }
+//            if (!post.getImages().isEmpty()) {
+//                System.out.println("!!" + post.getImages());
+//            }
             if (!post.getInnerPosts().isEmpty()) {
-                System.out.println("✅" + post.getInnerPosts());
+                System.out.println("✅" + post.getInnerPosts().size());
+            }
+            if (!post.getComments().isEmpty()) {
+                post.getComments().forEach(Comment::printIdAndAmountOfImages);
             }
         }
 

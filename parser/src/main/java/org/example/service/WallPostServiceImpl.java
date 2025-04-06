@@ -20,28 +20,30 @@ public class WallPostServiceImpl implements WallPostService {
     private final WallPostDao wallPostDao;
     private final ImageService imageService;
     private final InnerPostService innerPostService;
+    private final CommentService commentService;
 
     @Autowired
     public WallPostServiceImpl(WallPostDao wallPostDao,
                                ImageService imageService,
-                               InnerPostService innerPostService) {
+                               InnerPostService innerPostService,
+                               CommentService commentService) {
         this.wallPostDao = wallPostDao;
         this.imageService = imageService;
         this.innerPostService = innerPostService;
+        this.commentService = commentService;
     }
 
     @Override
     public void save(WallPost wallPost) {
         wallPostDao.save(wallPost);
         if (!wallPost.getImages().isEmpty()) {
-            System.out.println("In wallpost service is not empty");
             imageService.saveAll(wallPost.getImages());
-        } else {
-            System.out.println("Empty one");
         }
         if (!wallPost.getInnerPosts().isEmpty()) {
-            System.out.println("Inner posts are not empty for post with id = " + wallPost.getWallPostId());
             innerPostService.saveAll(wallPost.getInnerPosts());
+        }
+        if (!wallPost.getComments().isEmpty()) {
+            commentService.saveAll(wallPost.getComments());
         }
     }
 
@@ -58,8 +60,8 @@ public class WallPostServiceImpl implements WallPostService {
 
         for (WallPost post : posts) {
             post.setImages(wallPostImagesMap.getOrDefault(post.getWallPostId(), new ArrayList<>()));
-            System.out.println("\uD83D\uDC94" + wallPostInnerPostMap.get(post.getWallPostId()));
             post.setInnerPosts(wallPostInnerPostMap.getOrDefault(post.getWallPostId(), new ArrayList<>()));
+            post.setComments(commentService.findAllByPostId(post.getWallPostId()));
         }
         return posts;
     }

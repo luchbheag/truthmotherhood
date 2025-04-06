@@ -19,7 +19,6 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public void saveAll(List<Image> images) {
-        System.out.println("TRY TO SAVE ALL IMAGES WITH DAO");
         for (Image image : images) {
             imageDao.save(image);
         }

@@ -15,7 +15,7 @@ import java.util.List;
 public class WallPostDao {
     private final static int LIMIT = 10;
     private final static String ADD_WALL_POST_SQL="INSERT OR IGNORE INTO wall_posts (wall_post_id, text, date) VALUES(?,?,?)";
-    private final static String SELECT_ALL_WALL_POST_SQL="SELECT wall_post_id, text, date FROM wall_posts ORDER BY date LIMIT ?";
+    private final static String SELECT_ALL_WALL_POST_SQL="SELECT wall_post_id, text, date FROM wall_posts ORDER BY wall_post_id, date LIMIT ?";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -44,7 +44,8 @@ public class WallPostDao {
     private WallPost mapWallPost(ResultSet rs) throws SQLException {
         return new WallPost(
                 rs.getLong("wall_post_id"),
-                rs.getString("text")
+                rs.getString("text"),
+                LocalDateTime.parse(rs.getString("date"))
         );
     }
 }

@@ -1,6 +1,5 @@
 package org.example.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -20,9 +19,10 @@ public class WallPost {
     List<InnerPost> innerPosts = new ArrayList<>();
     List<Comment> comments = new ArrayList<>();
 
-    public WallPost(Long wallPostId, String text) {
+    public WallPost(Long wallPostId, String text, LocalDateTime date) {
         this.wallPostId = wallPostId;
         this.text = text;
+        this.date = date;
     }
 
     public boolean isEmpty() {

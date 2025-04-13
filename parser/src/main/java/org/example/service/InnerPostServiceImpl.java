@@ -3,7 +3,6 @@ package org.example.service;
 import org.example.dao.InnerPostDao;
 import org.example.entity.Image;
 import org.example.entity.InnerPost;
-import org.example.entity.WallPost;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

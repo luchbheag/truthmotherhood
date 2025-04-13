@@ -24,45 +24,42 @@ public class ParserCommandLineRunner implements CommandLineRunner {
     public void run(String... args) throws Exception {
         System.out.println("STARTS EXECUTION");
         Parser parser = new Parser();
-        List<WallPost> posts = new ArrayList<>();
+//        List<WallPost> posts = new ArrayList<>();
         while (!parser.isEmpty()) {
             WallPost post = parser.parseWallPost();
             if (!(post == null || post.isEmpty())) {
-                posts.add(post);
-//                if (!post.getImages().isEmpty()) {
-//                    System.out.println("!!" + post.getImages());
+//                posts.add(post);
+//                System.out.println("WallPost id from parser: " + post.getWallPostId());
+//                if (!post.getComments().isEmpty()) {
+//                    System.out.println("Comments: " + post.getComments().size());
+//                    post.getComments().forEach(comment -> {
+//                        String prefix = comment.getThreadStarterId() == null ? "" : "\t\t";
+//                        System.out.println(prefix + comment.getCommentId());
+//                    });
 //                }
-//                if (!post.getInnerPosts().isEmpty()) {
-//                    System.out.println("\uD83D\uDD25 " + post.getInnerPosts());
-//                }
-                if (!post.getComments().isEmpty()) {
-//                    System.out.println("\uD83D\uDC1D");
-                    post.getComments().forEach(Comment::printIdAndAmountOfImages);
-                }
                 wallPostService.save(post);
             }
         }
-        System.out.println("POSTS FROM PARSER: " + posts.size());
+//        System.out.println("POSTS FROM PARSER: " + posts.size());
+//
+//        List<WallPost> postsFromDb = wallPostService.findAll();
 
-        List<WallPost> postsFromDb = wallPostService.findAll();
-
-        System.out.println();
-        System.out.println();
-        System.out.println();
-        System.out.println("Posts from DB: " + postsFromDb.size());
-        for (WallPost post : postsFromDb) {
-            System.out.println(post.getWallPostId());
-//            if (!post.getImages().isEmpty()) {
-//                System.out.println("!!" + post.getImages());
+//        System.out.println();
+//        System.out.println();
+//        System.out.println();
+//        System.out.println("Posts from DB: " + postsFromDb.size());
+//        for (WallPost post : postsFromDb) {
+//            System.out.println("WallPost id: " + post.getWallPostId());
+//            if (!post.getComments().isEmpty()) {
+//                System.out.println("Comments size: " + post.getComments().size());
+//                post.getComments().forEach(comment -> {
+//                    String prefix = comment.getThreadStarterId() == null || comment.getThreadStarterId() == 0 ? "" : "\t\t";
+//                    System.out.println(prefix + comment.getCommentId());
+//                });
 //            }
-            if (!post.getInnerPosts().isEmpty()) {
-                System.out.println("✅" + post.getInnerPosts().size());
-            }
-            if (!post.getComments().isEmpty()) {
-                post.getComments().forEach(Comment::printIdAndAmountOfImages);
-            }
-        }
+//        }
 
         System.out.println("END EXECUTION");
+        System.exit(0);
     }
 }

@@ -4,23 +4,28 @@
 * Комментарии (с image)
 * Вложенные посты (репосты, с image)
 
-**На очереди**
-* Подключить все таблички (сейчас только базовые посты)
-* Обработка ошибок (чтобы не вылетало на середине)
-* Логирование
-
 **Подготовка:**
 
-Поместите в директорию `parser/src/main/resources` файл `wall_comments.json`
+Поместите в директорию `parser/src/main/resources` файл с названием `wall_comments.json`
 
 **Как запустить:**
 
-Запустить можно с помощью `Docker`:
+Запустить можно с помощью `Docker` (запускать из директории `parser`, в которой располагается `Dockerfile`):
 ```
-docker build --tag "image_name" .
-docker run "image_name"
+docker build --tag image_name .
+docker run --name my_container image_name
 ```
-В целом это для удобства, никаких дополнительных сервисов там нет (внутри просто вызывается **mvn**). Можно собрать и запустить вручную с помощью **mvn**.
+После завершения (если программа не завершилась сама, нажать ctrl+c) выполнить
+```
+docker cp my_container:/usr/app/database.sqlite ./database.sqlite
+```
+Удалить Docker-контейнер:
+```
+docker run --name my_container image_name
+```
+Файл `database.sqlite` будет размещен в директории `parser`.
+
+В целом Docker используется для удобства. Можно собрать и запустить вручную с помощью **mvn**.
 
 **Заметки**
 

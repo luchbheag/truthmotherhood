@@ -10,12 +10,20 @@ import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Parser {
     private final JsonParser jParser;
-    private List<Comment> currentThread = new ArrayList<>();
+    private Long currentWallPostId;
+    private Long currentInnerPostId;
+    private Long currentImageId;
+    private Long currentCommentId;
+    private Long currentUserId;
+    private final Random random;
+    private Map<Long, Long> mapOldToNewCommentIds;
+    private Map<Long, Long> mapOldToNewUserIds;
 
     public Parser() throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -23,6 +31,11 @@ public class Parser {
 
         jParser = objectMapper.getFactory().createParser(is);
         jParser.nextToken();
+        this.currentWallPostId = 1L;
+        this.currentInnerPostId = 1L;
+        this.currentImageId = 1L;
+        this.currentCommentId = 1L;
+        this.random = new Random();
     }
 
     public WallPost parseWallPost() throws IOException {
@@ -36,8 +49,8 @@ public class Parser {
                 if (jParser.currentName() != null) {
                     switch (jParser.currentName()) {
                         case "id":
-                            jParser.nextToken();
-                            wallPostBuilder.wallPostId(jParser.getLongValue());
+                            System.out.println("Parsing wallPost with id = " + getLongValue(jParser));
+                            wallPostBuilder.wallPostId(this.currentWallPostId);
                             break;
                         case "text":
                             wallPostBuilder.text(jParser.getText());
@@ -68,17 +81,19 @@ public class Parser {
             }
             post = wallPostBuilder.build();
             if (!images.isEmpty()) {
-                setWallPostIdForImages(post.getWallPostId(), images);
+                setWallPostIdForImages(this.currentWallPostId, images);
             }
             post.setImages(images);
             if (!innerPosts.isEmpty()) {
-                setWallPostIdForInnerPosts(post.getWallPostId(), innerPosts);
+                setWallPostIdForInnerPosts(this.currentWallPostId, innerPosts);
             }
             post.setInnerPosts(innerPosts);
-            post.setComments(comments); // TODO: set comment_id in images
+            post.setComments(comments);
+            this.currentWallPostId++;
         } catch (IOException e) {
             e.printStackTrace();
             jParser.skipChildren();
+            this.currentWallPostId++;
         }
         return post;
     }
@@ -101,10 +116,7 @@ public class Parser {
         return innerPosts;
     }
 
-    // TODO: for more than one, check structure
-    // TODO: probably can be recursive, there will be just no comments
     private InnerPost getInnerPost(JsonParser jParser) throws IOException {
-        // TODO: process other InnerPosts (can be multiple if it is repost of repost etc
         InnerPost innerPost = null;
         try {
             InnerPost.InnerPostBuilder innerPostBuilder = InnerPost.builder();
@@ -114,7 +126,8 @@ public class Parser {
                 if (jParser.currentName() != null) {
                     switch (jParser.currentName()) {
                         case "id":
-                            innerPostBuilder.innerPostId(getLongValue(jParser));
+                            getLongValue(jParser);
+                            innerPostBuilder.innerPostId(this.currentInnerPostId);
                             break;
                         case "text":
                             innerPostBuilder.text(jParser.getText());
@@ -139,15 +152,21 @@ public class Parser {
                 setInnerPostIdForImages(innerPost.getInnerPostId(), images);
             }
             innerPost.setImages(images);
+            innerPost.setWallPostId(this.currentWallPostId);
+            this.currentInnerPostId++;
         } catch (IOException e) {
             e.printStackTrace();
             jParser.skipChildren(); // bad ones
+            this.currentInnerPostId++;
         }
         return innerPost;
     }
 
     private List<Comment> getComments(JsonParser jParser) throws IOException {
         List<Comment> comments = new ArrayList<>();
+        this.mapOldToNewCommentIds = new HashMap<>();
+        this.mapOldToNewUserIds = new HashMap<>();
+        this.currentUserId = 40000L + random.nextInt(1000);
 
         jParser.nextToken();
         while(!(jParser.currentToken() == JsonToken.END_ARRAY
@@ -155,9 +174,6 @@ public class Parser {
             if (jParser.currentToken() == JsonToken.START_OBJECT
             && jParser.currentName() == null) {
                 getComment(jParser, comments);
-//                if (comment != null) {
-//                    comments.add(comment);
-//                }
             }
             jParser.nextToken();
         };
@@ -175,12 +191,10 @@ public class Parser {
                 if (jParser.currentName() != null) {
                     switch (jParser.currentName()) {
                         case "id":
-                            jParser.nextToken();
-                            commentBuilder.commentId(jParser.getLongValue());
+                            commentBuilder.commentId(getNewCommentIdByOldId(getLongValue(jParser)));
                             break;
                         case "from_id":
-                            jParser.nextToken();
-                            commentBuilder.userId(jParser.getLongValue());
+                            commentBuilder.userId(getNewUserIdByOldId(getLongValue(jParser)));
                             break;
                         case "text":
                             jParser.nextToken();
@@ -193,8 +207,7 @@ public class Parser {
                             images = getImages(jParser);
                             break;
                         case "post_id":
-                            jParser.nextToken();
-                            commentBuilder.wallPostId(jParser.getLongValue());
+                            getLongValue(jParser);
                             break;
                         case "parents_stack":
                             jParser.skipChildren();
@@ -207,6 +220,7 @@ public class Parser {
                 }
                 jParser.nextToken();
             }
+            commentBuilder.wallPostId(this.currentWallPostId);
             comment = commentBuilder.build();
             if (!images.isEmpty()) {
                 setCommentIdForImages(comment.getCommentId(), images);
@@ -257,39 +271,40 @@ public class Parser {
                 if (jParser.currentName() != null) {
                     switch (jParser.currentName()) {
                         case "id":
-                            commentBuilder.commentId(getLongValue(jParser));
+                            commentBuilder.commentId(getNewCommentIdByOldId(getLongValue(jParser)));
                             break;
                         case "text":
                             jParser.nextToken();
-                            commentBuilder.text(jParser.getText());
+                            commentBuilder.text(formatTextInThreadComment(jParser.getText()));
                             break;
                         case "from_id":
-                            commentBuilder.userId(getLongValue(jParser));
+                            commentBuilder.userId(getNewUserIdByOldId(getLongValue(jParser)));
                             break;
                         case "post_id":
-                            commentBuilder.wallPostId(getLongValue(jParser));
-//                            getLongValue(jParser);
+                            getLongValue(jParser);
+                            commentBuilder.wallPostId(this.currentWallPostId);
                             break;
                         case "date":
                             commentBuilder.date(getDateTime(getLongValue(jParser)));
                             break;
                         case "parents_stack":
                             jParser.nextToken();
-                            commentBuilder.threadStarterId(getLongValue(jParser));
+                            commentBuilder.threadStarterId(getNewCommentIdByOldId(getLongValue(jParser)));
                             jParser.nextToken();
                             break;
                         case "reply_to_user":
                             if (jParser.currentToken() != JsonToken.VALUE_NUMBER_INT) {
                                 jParser.nextToken();
                             }
-//                            commentBuilder.threadStarterId(jParser.getLongValue());
+                            commentBuilder.userToAnswerId(getNewUserIdByOldId(jParser.getLongValue()));
                             jParser.getLongValue();
                             break;
                         case "reply_to_comment":
+                            // what if comment was deleted?
                             if (jParser.currentToken() != JsonToken.VALUE_NUMBER_INT) {
                                 jParser.nextToken();
                             }
-                            commentBuilder.commentToAnswerId(jParser.getLongValue());
+                            commentBuilder.commentToAnswerId(getNewCommentIdByOldId(jParser.getLongValue()));
                             break;
                         case "attachments":
                             images = getImages(jParser);
@@ -334,7 +349,8 @@ public class Parser {
                     && "photo".equals(jParser.currentName()))) {
                 switch (jParser.currentName()) {
                     case "id":
-                        imageBuilder.id(getLongValue(jParser));
+                        getLongValue(jParser);
+                        imageBuilder.id(this.currentImageId++);
                         break;
                     case "orig_photo":
                         fillImageSizesAndUrl(jParser, imageBuilder);
@@ -418,5 +434,34 @@ public class Parser {
 
     private void setCommentIdForImages(Long commentId, List<Image> images) {
         images.forEach(image -> image.setCommentId(commentId));
+    }
+
+    private long getNewUserIdByOldId(Long oldUserId) {
+        if (!this.mapOldToNewUserIds.containsKey(oldUserId)) {
+            this.mapOldToNewUserIds.put(oldUserId, this.currentUserId);
+            this.currentUserId += random.nextInt(20);
+        }
+        return this.mapOldToNewUserIds.get(oldUserId);
+    }
+
+    private long getNewCommentIdByOldId(Long oldId) {
+        if (!this.mapOldToNewCommentIds.containsKey(oldId)) {
+            this.mapOldToNewCommentIds.put(oldId, this.currentCommentId++);
+        }
+        return this.mapOldToNewCommentIds.get(oldId);
+    }
+
+    private String formatTextInThreadComment(String text) {
+        Pattern pattern = Pattern.compile("\\[id(\\d+)\\|");
+        Matcher matcher = pattern.matcher(text);
+        Long newUserId = 0L;
+
+        if (matcher.find()) {
+            String numberStr = matcher.group(1);
+            Long oldUserId = Long.parseLong(numberStr);
+            newUserId = getNewUserIdByOldId(oldUserId);
+        }
+
+        return text.replaceFirst("\\[id\\d+\\|[^\\]]+]", String.format("[id%d]", newUserId));
     }
 }

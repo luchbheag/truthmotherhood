@@ -1,6 +1,5 @@
 package org.example.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
 
 @Getter
@@ -17,13 +16,4 @@ public class Image {
     private Long wallPostId;
     private Long innerPostId;
     private Long commentId;
-
-//    @Override
-//    public String toString() {
-//        return "Image [id=" + id
-////                + ", post_id=" + postId
-//                + ", height=" + height
-//                + ", width=" + width
-//                + ", url=" + url + "]";
-//    }
 }

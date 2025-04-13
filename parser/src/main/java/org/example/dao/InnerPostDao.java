@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -52,7 +53,8 @@ public class InnerPostDao {
         return new InnerPost(
                 rs.getLong("inner_post_id"),
                 rs.getString("text"),
-                rs.getLong("wall_post_id")
+                rs.getLong("wall_post_id"),
+                LocalDateTime.parse(rs.getString("date"))
         );
     }
 }

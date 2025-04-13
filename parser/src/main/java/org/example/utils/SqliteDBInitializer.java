@@ -1,13 +1,9 @@
 package org.example.utils;
 
 import jakarta.annotation.PostConstruct;
-import org.example.entity.Image;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Component
 public class SqliteDBInitializer {
@@ -23,16 +19,16 @@ public class SqliteDBInitializer {
         String sqlWallPosts = """
                 CREATE TABLE IF NOT EXISTS wall_posts (
                     wall_post_id INTEGER PRIMARY KEY,
-                    text TEXT NOT NULL,
-                    date TEXT NOT NULL
+                    text TEXT NULL,
+                    date TEXT NULL
                 )
                 """;
         String sqlImages = """
                 CREATE TABLE IF NOT EXISTS images (
                     image_id INTEGER PRIMARY KEY,
-                    height INTEGER NOT NULL,
-                    width INTEGER NOT NULL,
-                    url TEXT NOT NULL,
+                    height INTEGER NULL,
+                    width INTEGER NULL,
+                    url TEXT NULL,
                     wall_post_id INTEGER NULL,
                     inner_post_id INTEGER NULL,
                     comment_id INTEGER NULL
@@ -41,20 +37,21 @@ public class SqliteDBInitializer {
         String sqlInnerPosts = """
                 CREATE TABLE IF NOT EXISTS inner_posts (
                     inner_post_id INTEGER PRIMARY KEY,
-                    text TEXT NOT NULL,
-                    date TEXT NOT NULL,
+                    text TEXT NULL,
+                    date TEXT NULL,
                     wall_post_id INTEGER NOT NULL
                 )
                 """;
         String sqlComments = """
                 CREATE TABLE IF NOT EXISTS comments (
                     comment_id INTEGER PRIMARY KEY,
-                    user_id INTEGER NOT NULL,
-                    text TEXT NOT NULL,
-                    date TEXT NOT NULL,
-                    wall_post_id INTEGER NOT NULL,
+                    user_id INTEGER NULL,
+                    text TEXT NULL,
+                    date TEXT NULL,
+                    wall_post_id INTEGER NULL,
                     thread_starter_id INTEGER NULL,
-                    comment_to_answer_id INTEGER NULL
+                    comment_to_answer_id INTEGER NULL,
+                    user_to_answer_id INTEGER NULL
                 )
                 """;
         jdbcTemplate.execute(sqlWallPosts);

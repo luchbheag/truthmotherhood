@@ -1,12 +1,15 @@
 package org.example;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.entity.Comment;
+import org.example.entity.Topic;
 import org.example.entity.WallPost;
 import org.example.service.WallPostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,41 +26,26 @@ public class ParserCommandLineRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         System.out.println("STARTS EXECUTION");
-        Parser parser = new Parser();
-//        List<WallPost> posts = new ArrayList<>();
-        while (!parser.isEmpty()) {
-            WallPost post = parser.parseWallPost();
-            if (!(post == null || post.isEmpty())) {
-//                posts.add(post);
-//                System.out.println("WallPost id from parser: " + post.getWallPostId());
-//                if (!post.getComments().isEmpty()) {
-//                    System.out.println("Comments: " + post.getComments().size());
-//                    post.getComments().forEach(comment -> {
-//                        String prefix = comment.getThreadStarterId() == null ? "" : "\t\t";
-//                        System.out.println(prefix + comment.getCommentId());
-//                    });
-//                }
-                wallPostService.save(post);
+        ParserTopics parserTopics = new ParserTopics();
+        List<Topic> topics = parserTopics.parseTopics();
+        System.out.println("Size:" + topics.size());
+        int count = 0;
+        for (Topic topic : topics) {
+            System.out.println(topic);
+            if (topic.getComments().size() != 0) {
+                count++;
             }
         }
-//        System.out.println("POSTS FROM PARSER: " + posts.size());
-//
-//        List<WallPost> postsFromDb = wallPostService.findAll();
-
-//        System.out.println();
-//        System.out.println();
-//        System.out.println();
-//        System.out.println("Posts from DB: " + postsFromDb.size());
-//        for (WallPost post : postsFromDb) {
-//            System.out.println("WallPost id: " + post.getWallPostId());
-//            if (!post.getComments().isEmpty()) {
-//                System.out.println("Comments size: " + post.getComments().size());
-//                post.getComments().forEach(comment -> {
-//                    String prefix = comment.getThreadStarterId() == null || comment.getThreadStarterId() == 0 ? "" : "\t\t";
-//                    System.out.println(prefix + comment.getCommentId());
-//                });
+        System.out.println("Topics with comments:" + count);
+//        Parser parser = new Parser();
+//        while (!parser.isEmpty()) {
+//            WallPost post = parser.parseWallPost();
+//            if (!(post == null || post.isEmpty())) {
+//                wallPostService.save(post);
 //            }
 //        }
+//        List<WallPost> postsFromDb = wallPostService.findAll();
+//        JsonWriter.writeToJsonFile(postsFromDb, "wall_posts.json");
 
         System.out.println("END EXECUTION");
         System.exit(0);

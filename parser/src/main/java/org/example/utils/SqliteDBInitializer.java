@@ -23,6 +23,14 @@ public class SqliteDBInitializer {
                     date TEXT NULL
                 )
                 """;
+        /*
+        id,
+        text,
+        data
+        List<Image>
+        List<InnerPost>
+        List<Comment>
+         */
         String sqlImages = """
                 CREATE TABLE IF NOT EXISTS images (
                     image_id INTEGER PRIMARY KEY,

@@ -33,7 +33,7 @@ public class Parser {
         jParser.nextToken();
         this.currentWallPostId = 1L;
         this.currentInnerPostId = 1L;
-        this.currentImageId = 1L;
+        this.currentImageId = 2L; // because we need 1 for only image in topics
         this.currentCommentId = 1L;
         this.random = new Random();
     }

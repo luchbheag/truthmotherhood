@@ -43,4 +43,9 @@ public class ImageServiceImpl implements ImageService {
     public List<Image> findAllByMultipleCommentIds(List<Long> commentIds) {
         return imageDao.findAllByMultipleCommentIds(commentIds);
     }
+
+    @Override
+    public List<Image> findAllByMultipleTopicCommentIds(List<Long> topicCommentIds) {
+        return imageDao.findAllByMultipleCommentIds(topicCommentIds);
+    }
 }

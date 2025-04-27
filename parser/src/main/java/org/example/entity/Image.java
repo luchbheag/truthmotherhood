@@ -16,4 +16,5 @@ public class Image {
     private Long wallPostId;
     private Long innerPostId;
     private Long commentId;
+    private Long topicCommentId;
 }

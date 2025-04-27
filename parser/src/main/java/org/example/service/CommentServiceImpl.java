@@ -44,11 +44,6 @@ public class CommentServiceImpl implements CommentService{
         return comments;
     }
 
-    @Override
-    public int countAllCommentsInTable() {
-        return commentDao.countAllCommentsInTable();
-    }
-
     private Map<Long, List<Image>> getImagesForComments(List<Long> commentsIds) {
         System.out.println(imageService.findAllByMultipleCommentIds(commentsIds));
 
@@ -56,4 +51,10 @@ public class CommentServiceImpl implements CommentService{
                 .stream()
                 .collect(Collectors.groupingBy(Image::getCommentId));
     }
+
+    @Override
+    public int countAllCommentsInTable() {
+        return commentDao.countAllCommentsInTable();
+    }
+
 }

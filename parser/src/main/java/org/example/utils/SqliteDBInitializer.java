@@ -1,9 +1,13 @@
 package org.example.utils;
 
 import jakarta.annotation.PostConstruct;
+import org.example.entity.Image;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 public class SqliteDBInitializer {
@@ -39,7 +43,8 @@ public class SqliteDBInitializer {
                     url TEXT NULL,
                     wall_post_id INTEGER NULL,
                     inner_post_id INTEGER NULL,
-                    comment_id INTEGER NULL
+                    comment_id INTEGER NULL,
+                    topic_comment_id INTEGER NULL
                 )
                 """;
         String sqlInnerPosts = """
@@ -62,6 +67,23 @@ public class SqliteDBInitializer {
                     user_to_answer_id INTEGER NULL
                 )
                 """;
+        String sqlTopics = """
+                CREATE TABLE IF NOT EXISTS topics (
+                    topic_id INTEGER PRIMARY KEY,
+                    title TEXT NULL,
+                    date TEXT NULL
+                )
+                """;
+        String sqlTopicComments = """
+                CREATE TABLE IF NOT EXISTS topic_comments (
+                    topic_comment_id INTEGER PRIMARY KEY,
+                    text TEXT NULL,
+                    date TEXT NULL,
+                    user_id INTEGER NULL,
+                    topic_id INTEGER NULL,
+                    number_of_documents INTEGER DEFAULT 0
+                )
+                """;
         jdbcTemplate.execute(sqlWallPosts);
         System.out.println("INFO: wall_posts table was created");
         jdbcTemplate.execute(sqlImages);
@@ -70,5 +92,9 @@ public class SqliteDBInitializer {
         System.out.println("INFO: inner_posts table was created");
         jdbcTemplate.execute(sqlComments);
         System.out.println("INFO: comments table was created");
+        jdbcTemplate.execute(sqlTopics);
+        System.out.println("INFO: topics table was created");
+        jdbcTemplate.execute(sqlTopicComments);
+        System.out.println("INFO: topic_comments table was created");
     }
 }

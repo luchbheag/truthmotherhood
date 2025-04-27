@@ -16,4 +16,10 @@ public class Topic {
     private String title;
     private LocalDateTime date;
     private List<TopicComment> comments;
+
+    public Topic(Long topicId, String title, LocalDateTime date) {
+        this.topicId = topicId;
+        this.title = title;
+        this.date = date;
+    }
 }

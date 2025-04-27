@@ -14,4 +14,6 @@ public interface ImageService {
     public List<Image> findAllByMultipleInnerPostIds(List<Long> InnerPostIds);
 
     public List<Image> findAllByMultipleCommentIds(List<Long> InnerPostIds);
+
+    public List<Image> findAllByMultipleTopicCommentIds(List<Long> InnerPostIds);
 }

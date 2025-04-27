@@ -3,6 +3,7 @@ package org.example;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.entity.Image;
 import org.example.entity.Topic;
 import org.example.entity.TopicComment;
 
@@ -18,6 +19,8 @@ import java.util.Random;
 public class ParserTopics {
 
     private final JsonParser jParser;
+    private Long currentImageId;
+    private int currentDocumentsCount;
 
     public ParserTopics() throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -25,6 +28,8 @@ public class ParserTopics {
 
         jParser = objectMapper.getFactory().createParser(is);
         jParser.nextToken();
+        this.currentDocumentsCount = 0;
+        this.currentImageId = 1L;
     }
 
     public List<Topic> parseTopics() throws IOException {
@@ -36,7 +41,7 @@ public class ParserTopics {
             }
             while (!(jParser.currentToken() == JsonToken.END_ARRAY && "items".equals(jParser.currentName()))) {
                 Topic topic = parseTopic();
-                if (topic != null) {
+                if (topic != null && topic.getComments() != null && !topic.getComments().isEmpty()) {
                     System.out.println("\uD83D\uDD25" + topic.getTopicId());
                     topics.add(topic);
                 }
@@ -56,7 +61,7 @@ public class ParserTopics {
             Topic.TopicBuilder topicBuilder = Topic.builder();
             while (jParser.currentToken() != null && jParser.currentToken() != JsonToken.END_OBJECT) {
                 if (jParser.currentName() != null) {
-                    System.out.println("!!" + jParser.currentToken() + " " + jParser.currentName());
+                    //System.out.println("!!" + jParser.currentToken() + " " + jParser.currentName());
                     switch (jParser.currentName()) {
                         case "id":
                             topicBuilder.topicId(getLongValue(jParser));
@@ -69,10 +74,10 @@ public class ParserTopics {
                             break;
                         case "comments":
                             jParser.nextToken();
-                            System.out.println("@#$$#@" + jParser.currentName() + jParser.currentToken());
+                            //System.out.println("@#$$#@" + jParser.currentName() + jParser.currentToken());
                             if (jParser.currentToken() != JsonToken.VALUE_NUMBER_INT) {
                                 comments = getComments();
-                                System.out.println("COMMENTS SIZE:" + comments.size());
+                                //System.out.println("COMMENTS SIZE:" + comments.size());
                             }
                             break;
                     }
@@ -80,7 +85,10 @@ public class ParserTopics {
                 jParser.nextToken();
             }
             topic = topicBuilder.build();
-            topic.setComments(comments);
+            if (!comments.isEmpty()) {
+                setTopicIdForComments(topic.getTopicId(), comments);
+                topic.setComments(comments);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -91,7 +99,7 @@ public class ParserTopics {
         List<TopicComment> comments = new ArrayList<>();
         try {
             jParser.nextToken();
-            System.out.println("FIRST TOKEN AFTER: " + jParser.currentToken() + jParser.currentName());
+            //System.out.println("FIRST TOKEN AFTER: " + jParser.currentToken() + jParser.currentName());
             if (jParser.currentToken() == JsonToken.END_OBJECT) {
                 return comments;
             }
@@ -117,6 +125,8 @@ public class ParserTopics {
 
     private TopicComment getComment() {
         TopicComment comment = null;
+        currentDocumentsCount = 0;
+        List<Image> images = new ArrayList<>();
         try {
             TopicComment.TopicCommentBuilder commentBuilder = TopicComment.builder();
             while (jParser.currentToken() != JsonToken.END_OBJECT) {
@@ -135,15 +145,17 @@ public class ParserTopics {
                             commentBuilder.userId(getLongValue(jParser));
                             break;
                         case "attachments":
-                            jParser.nextToken();
-                            jParser.skipChildren();
-                            jParser.nextToken();
+//                            jParser.nextToken();
+                            images = getAttachments(jParser);
+//                            jParser.nextToken();
                             break;
                     }
                 }
                 jParser.nextToken();
             }
             comment = commentBuilder.build();
+            comment.setImages(images);
+            comment.setNumberOfDocuments(this.currentDocumentsCount);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -162,5 +174,86 @@ public class ParserTopics {
                 .toLocalDateTime();
     }
 
-    private void setId
+    private void setTopicIdForComments(Long topicId, List<TopicComment> comments) {
+        comments.forEach(comment -> comment.setTopicId(topicId));
+    }
+
+    private List<Image> getAttachments(JsonParser jParser) throws IOException {
+        List<Image> images = new ArrayList<>();
+        jParser.nextToken();
+        jParser.nextToken();
+        while (!(jParser.currentToken() == JsonToken.END_ARRAY
+                && "attachments".equals(jParser.currentName()))) {
+            jParser.nextToken();
+            if (jParser.currentToken() == JsonToken.START_OBJECT) {
+                if (jParser.currentName() != null) {
+                    switch (jParser.currentName()) {
+                        case "photo":
+                            Image image = getImage(jParser);
+                            if (image != null) {
+                                images.add(image);
+                            }
+                            break;
+                        case "doc":
+                            this.currentDocumentsCount++;
+                            jParser.skipChildren();
+                            break;
+                    }
+                }
+            }
+        }
+        return images;
+    }
+
+    private Image getImage(JsonParser jParser) throws IOException {
+        jParser.nextToken();
+        Image image = null;
+        try {
+            Image.ImageBuilder imageBuilder = Image.builder();
+            while (!(jParser.currentToken() == JsonToken.END_OBJECT
+                    && "photo".equals(jParser.currentName()))) {
+                switch (jParser.currentName()) {
+                    case "id":
+                        getLongValue(jParser);
+                        imageBuilder.id(this.currentImageId++);
+                        break;
+                    case "orig_photo":
+                        fillImageSizesAndUrl(jParser, imageBuilder);
+                        break;
+                    case "sizes":
+                        jParser.skipChildren();
+                        break;
+                }
+                jParser.nextToken();
+            }
+            image = imageBuilder.build();
+        } catch (IOException e) {
+            e.printStackTrace();
+            jParser.skipChildren();
+        }
+        return image;
+    }
+
+    private void fillImageSizesAndUrl(JsonParser jParser, Image.ImageBuilder imageBuilder) throws IOException {
+        jParser.nextToken();
+        while(jParser.currentToken() != JsonToken.END_OBJECT) {
+            switch (jParser.currentName()) {
+                case "url":
+                    imageBuilder.url(jParser.getText());
+                    break;
+                case "width":
+                    imageBuilder.width(getIntValue(jParser));
+                    break;
+                case "height":
+                    imageBuilder.height(getIntValue(jParser));
+                    break;
+            }
+            jParser.nextToken();
+        }
+    }
+
+    private int getIntValue(JsonParser jParser) throws IOException {
+        jParser.nextToken();
+        return jParser.getIntValue();
+    }
 }

@@ -21,7 +21,7 @@ docker cp my_container:/usr/app/database.sqlite ./database.sqlite
 ```
 Удалить Docker-контейнер:
 ```
-docker run --name my_container image_name
+docker rm my_container
 ```
 Файл `database.sqlite` будет размещен в директории `parser`.
 

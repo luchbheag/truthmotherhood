@@ -15,12 +15,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Parser {
+    private static final Long idOfGroup = 8683208L;
     private final JsonParser jParser;
     private Long currentWallPostId;
     private Long currentInnerPostId;
     private Long currentImageId;
     private Long currentCommentId;
     private Long currentUserId;
+    private boolean hasOnlySticker;
     private final Random random;
     private Map<Long, Long> mapOldToNewCommentIds;
     private Map<Long, Long> mapOldToNewUserIds;
@@ -59,7 +61,7 @@ public class Parser {
                             wallPostBuilder.date(getDateTime(getLongValue(jParser)));
                             break;
                         case "attachments":
-                            images = getImages(jParser);
+                            images = getAttachments(jParser);
                             break;
                         case "copy_history":
                             innerPosts = getInnerPosts(jParser);
@@ -136,7 +138,7 @@ public class Parser {
                             innerPostBuilder.date(getDateTime(getLongValue(jParser)));
                             break;
                         case "attachments":
-                            images = getImages(jParser);
+                            images = getAttachments(jParser);
                             break;
                         case "post_source":
                             jParser.nextToken();
@@ -204,7 +206,7 @@ public class Parser {
                             commentBuilder.date(getDateTime(getLongValue(jParser)));
                             break;
                         case "attachments":
-                            images = getImages(jParser);
+                            images = getAttachments(jParser);
                             break;
                         case "post_id":
                             getLongValue(jParser);
@@ -296,18 +298,18 @@ public class Parser {
                             if (jParser.currentToken() != JsonToken.VALUE_NUMBER_INT) {
                                 jParser.nextToken();
                             }
-                            commentBuilder.userToAnswerId(getNewUserIdByOldId(jParser.getLongValue()));
-                            jParser.getLongValue();
+                            commentBuilder.userToAnswerId(getNewUserIdByOldId(Math.abs(jParser.getLongValue())));
+//                            jParser.getLongValue();
                             break;
                         case "reply_to_comment":
                             // what if comment was deleted?
                             if (jParser.currentToken() != JsonToken.VALUE_NUMBER_INT) {
                                 jParser.nextToken();
                             }
-                            commentBuilder.commentToAnswerId(getNewCommentIdByOldId(jParser.getLongValue()));
+                            commentBuilder.commentToAnswerId(getNewCommentIdByOldId(Math.abs(jParser.getLongValue())));
                             break;
                         case "attachments":
-                            images = getImages(jParser);
+                            images = getAttachments(jParser);
                             break;
                     }
                 }
@@ -325,16 +327,31 @@ public class Parser {
         return comment;
     }
 
-    private List<Image> getImages(JsonParser jParser) throws IOException {
+    private List<Image> getAttachments(JsonParser jParser) throws IOException {
         List<Image> images = new ArrayList<>();
         jParser.nextToken();
         jParser.nextToken();
         while (!(jParser.currentToken() == JsonToken.END_ARRAY
                 && "attachments".equals(jParser.currentName()))) {
             jParser.nextToken();
-            if (jParser.currentToken() == JsonToken.START_OBJECT
-                    && "photo".equals(jParser.currentName())) {
-                images.add(getImage(jParser));
+            if (jParser.currentToken() == JsonToken.START_OBJECT) {
+                if (jParser.currentName() != null) {
+                    switch (jParser.currentName()) {
+                        case "photo":
+                            Image image = getImage(jParser);
+                            if (image != null) {
+                                images.add(image);
+                            }
+                            break;
+                        case "doc":
+                        case "link":
+                        case "video":
+                        case "sticker":
+                        case "poll":
+                            jParser.skipChildren();
+                            break;
+                    }
+                }
             }
         }
         return images;
@@ -402,7 +419,7 @@ public class Parser {
 
     private long getLongValue(JsonParser jParser) throws IOException {
         jParser.nextToken();
-        return jParser.getLongValue();
+        return Math.abs(jParser.getLongValue());
     }
 
     private int getIntValue(JsonParser jParser) throws IOException {
@@ -452,14 +469,26 @@ public class Parser {
     }
 
     private String formatTextInThreadComment(String text) {
-        Pattern pattern = Pattern.compile("\\[id(\\d+)\\|");
-        Matcher matcher = pattern.matcher(text);
-        Long newUserId = 0L;
+        Pattern patternForUser = Pattern.compile("\\[id(\\d+)\\|");
+        Matcher matcherForUser = patternForUser.matcher(text);
 
-        if (matcher.find()) {
-            String numberStr = matcher.group(1);
-            Long oldUserId = Long.parseLong(numberStr);
+        Pattern patternForGroup = Pattern.compile("\\[group(\\d+)\\|");
+        Matcher matcherForGroup = patternForGroup.matcher(text);
+
+        long newUserId = 0L;
+
+        if (matcherForUser.find()) {
+            String numberStr = matcherForUser.group(1);
+            Long oldUserId = Math.abs(Long.parseLong(numberStr));
             newUserId = getNewUserIdByOldId(oldUserId);
+            text = text.replaceFirst("\\[id\\d+\\|[^\\]]+]", String.format("[id%d]", newUserId));
+        } else if (matcherForGroup.find()) {
+            String numberStr = matcherForUser.group(1);
+            Long oldGroupId = Math.abs(Long.parseLong(numberStr));
+            if (!oldGroupId.equals(idOfGroup)) {
+                newUserId = getNewUserIdByOldId(oldGroupId);
+                text = text.replaceFirst("\\[id\\d+\\|[^\\]]+]", String.format("[id%d]", newUserId));
+            }
         }
 
         return text.replaceFirst("\\[id\\d+\\|[^\\]]+]", String.format("[id%d]", newUserId));

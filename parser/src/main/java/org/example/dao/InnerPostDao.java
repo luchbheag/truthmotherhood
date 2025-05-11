@@ -15,8 +15,8 @@ import java.util.List;
 @Repository
 public class InnerPostDao {
 
-    private final static String ADD_INNER_POST_SQL = "INSERT OR IGNORE INTO inner_posts (inner_post_id, text, date, wall_post_id) VALUES(?,?,?,?)";
-    private final static String SELECT_ALL_INNER_POSTS_BY_MULTIPLE_WALL_POSTS_SQL = "SELECT inner_post_id, text, date, wall_post_id FROM inner_posts WHERE wall_post_id IN (%s)";
+    private final static String ADD_INNER_POST_SQL = "INSERT OR IGNORE INTO inner_posts (inner_post_id, text, date, wall_post_id, has_documents, has_polls, has_links, has_videos) VALUES(?,?,?,?,?,?,?,?)";
+    private final static String SELECT_ALL_INNER_POSTS_BY_MULTIPLE_WALL_POSTS_SQL = "SELECT inner_post_id, text, date, wall_post_id, has_documents, has_polls, has_links, has_videos FROM inner_posts WHERE wall_post_id IN (%s)";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -33,7 +33,11 @@ public class InnerPostDao {
                     innerPost.getInnerPostId(),
                     innerPost.getText(),
                     innerPost.getDate(),
-                    innerPost.getWallPostId()
+                    innerPost.getWallPostId(),
+                    innerPost.getHasDocuments(),
+                    innerPost.getHasPoll(),
+                    innerPost.getHasLinks(),
+                    innerPost.getHasVideo()
             );
         }
     }
@@ -54,7 +58,11 @@ public class InnerPostDao {
                 rs.getLong("inner_post_id"),
                 rs.getString("text"),
                 rs.getLong("wall_post_id"),
-                LocalDateTime.parse(rs.getString("date"))
+                LocalDateTime.parse(rs.getString("date")),
+                rs.getInt("has_documents") > 0,
+                rs.getInt("has_polls") > 0,
+                rs.getInt("has_links") > 0,
+                rs.getInt("has_videos") > 0
         );
     }
 }

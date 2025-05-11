@@ -13,8 +13,8 @@ import java.util.List;
 
 @Repository
 public class TopicCommentDao {
-    private final static String ADD_TOPIC_COMMENT_SQL="INSERT OR IGNORE INTO topic_comments (topic_comment_id, text, date, user_id, topic_id, number_of_documents) VALUES(?,?,?,?,?,?)";
-    private final static String SELECT_ALL_TOPIC_COMMENTS_BY_ID_SQL="SELECT topic_comment_id, text, date, user_id, topic_id, number_of_documents FROM topic_comments WHERE topic_id = ?";
+    private final static String ADD_TOPIC_COMMENT_SQL="INSERT OR IGNORE INTO topic_comments (topic_comment_id, text, date, user_id, topic_id, has_documents) VALUES(?,?,?,?,?,?)";
+    private final static String SELECT_ALL_TOPIC_COMMENTS_BY_ID_SQL="SELECT topic_comment_id, text, date, user_id, topic_id, has_documents FROM topic_comments WHERE topic_id = ?";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -31,7 +31,7 @@ public class TopicCommentDao {
                 comment.getDate(),
                 comment.getUserId(),
                 comment.getTopicId(),
-                comment.getNumberOfDocuments()
+                comment.getHasDocuments() ? 1 : 0
         );
     }
 
@@ -50,7 +50,7 @@ public class TopicCommentDao {
                 LocalDateTime.parse(rs.getString("date")),
                 rs.getLong("user_id"),
                 rs.getLong("topic_id"),
-                rs.getInt("number_of_documents")
+                rs.getInt("has_documents") > 0
         );
     }
 }

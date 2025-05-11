@@ -24,17 +24,13 @@ public class SqliteDBInitializer {
                 CREATE TABLE IF NOT EXISTS wall_posts (
                     wall_post_id INTEGER PRIMARY KEY,
                     text TEXT NULL,
-                    date TEXT NULL
+                    date TEXT NULL,
+                    has_documents INTEGER DEFAULT 0,
+                    has_polls INTEGER DEFAULT 0,
+                    has_links INTEGER DEFAULT 0,
+                    has_videos INTEGER DEFAULT 0
                 )
                 """;
-        /*
-        id,
-        text,
-        data
-        List<Image>
-        List<InnerPost>
-        List<Comment>
-         */
         String sqlImages = """
                 CREATE TABLE IF NOT EXISTS images (
                     image_id INTEGER PRIMARY KEY,
@@ -52,7 +48,11 @@ public class SqliteDBInitializer {
                     inner_post_id INTEGER PRIMARY KEY,
                     text TEXT NULL,
                     date TEXT NULL,
-                    wall_post_id INTEGER NOT NULL
+                    wall_post_id INTEGER NOT NULL,
+                    has_documents INTEGER DEFAULT 0,
+                    has_polls INTEGER DEFAULT 0,
+                    has_links INTEGER DEFAULT 0,
+                    has_videos INTEGER DEFAULT 0
                 )
                 """;
         String sqlComments = """
@@ -64,7 +64,12 @@ public class SqliteDBInitializer {
                     wall_post_id INTEGER NULL,
                     thread_starter_id INTEGER NULL,
                     comment_to_answer_id INTEGER NULL,
-                    user_to_answer_id INTEGER NULL
+                    user_to_answer_id INTEGER NULL,
+                    has_documents INTEGER DEFAULT 0,
+                    has_polls INTEGER DEFAULT 0,
+                    has_links INTEGER DEFAULT 0,
+                    has_videos INTEGER DEFAULT 0,
+                    has_only_stickers INTEGER DEFAULT 0
                 )
                 """;
         String sqlTopics = """
@@ -81,7 +86,7 @@ public class SqliteDBInitializer {
                     date TEXT NULL,
                     user_id INTEGER NULL,
                     topic_id INTEGER NULL,
-                    number_of_documents INTEGER DEFAULT 0
+                    has_documents INTEGER DEFAULT 0
                 )
                 """;
         jdbcTemplate.execute(sqlWallPosts);

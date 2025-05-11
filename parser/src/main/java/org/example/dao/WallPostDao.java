@@ -14,8 +14,8 @@ import java.util.List;
 @Repository
 public class WallPostDao {
     private final static int LIMIT = 10;
-    private final static String ADD_WALL_POST_SQL="INSERT OR IGNORE INTO wall_posts (wall_post_id, text, date) VALUES(?,?,?)";
-    private final static String SELECT_ALL_WALL_POST_SQL="SELECT wall_post_id, text, date FROM wall_posts ORDER BY wall_post_id, date LIMIT ?";
+    private final static String ADD_WALL_POST_SQL="INSERT OR IGNORE INTO wall_posts (wall_post_id, text, date, has_documents, has_polls, has_links, has_videos) VALUES(?,?,?,?,?,?,?)";
+    private final static String SELECT_ALL_WALL_POST_SQL="SELECT wall_post_id, text, date, has_documents, has_videos, has_links, has_polls FROM wall_posts ORDER BY wall_post_id, date LIMIT ?";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -29,7 +29,11 @@ public class WallPostDao {
             ADD_WALL_POST_SQL,
             wallPost.getWallPostId(),
             wallPost.getText(),
-            wallPost.getDate()
+            wallPost.getDate(),
+            wallPost.getHasDocuments(),
+            wallPost.getHasPoll(),
+            wallPost.getHasLinks(),
+            wallPost.getHasVideo()
         );
     }
 
@@ -45,7 +49,11 @@ public class WallPostDao {
         return new WallPost(
                 rs.getLong("wall_post_id"),
                 rs.getString("text"),
-                LocalDateTime.parse(rs.getString("date"))
+                LocalDateTime.parse(rs.getString("date")),
+                rs.getInt("has_documents") > 0,
+                rs.getInt("has_polls") > 0,
+                rs.getInt("has_links") > 0,
+                rs.getInt("has_videos") > 0
         );
     }
 }

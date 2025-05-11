@@ -38,4 +38,32 @@ public class JsonWriter {
             e.printStackTrace();
         }
     }
+
+    public static void writeLinksToJsonFile(List<String> strs, String filename) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        try {
+            mapper.writeValue(new File(filename), strs);
+            System.out.println("JSON записан в файл: " + filename);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeIdsToJsonFile(List<Long> ids, String filename) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        try {
+            mapper.writeValue(new File(filename), ids);
+            System.out.println("JSON записан в файл: " + filename);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

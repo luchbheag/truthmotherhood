@@ -12,17 +12,33 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WallPost {
-    Long wallPostId;
-    String text;
-    LocalDateTime date;
-    List<Image> images = new ArrayList<>();
-    List<InnerPost> innerPosts = new ArrayList<>();
-    List<Comment> comments = new ArrayList<>();
+    private Long wallPostId;
+    private String text;
+    private LocalDateTime date;
+    private Boolean hasDocuments;
+    private Boolean hasPoll;
+    private Boolean hasLinks;
+    private Boolean hasVideo;
+    private List<Image> images = new ArrayList<>();
+    private List<InnerPost> innerPosts = new ArrayList<>();
+    private List<Comment> comments = new ArrayList<>();
 
-    public WallPost(Long wallPostId, String text, LocalDateTime date) {
+    public WallPost(
+            Long wallPostId,
+            String text,
+            LocalDateTime date,
+            Boolean hasDocuments,
+            Boolean hasPoll,
+            Boolean hasLinks,
+            Boolean hasVideo
+    ) {
         this.wallPostId = wallPostId;
         this.text = text;
         this.date = date;
+        this.hasDocuments = hasDocuments;
+        this.hasPoll = hasPoll;
+        this.hasLinks = hasLinks;
+        this.hasVideo = hasVideo;
     }
 
     public boolean isEmpty() {

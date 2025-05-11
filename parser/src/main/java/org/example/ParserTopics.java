@@ -13,22 +13,23 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
+import java.util.Map;
 
-public class ParserTopics {
+public class ParserTopics extends Parser {
 
     private final JsonParser jParser;
     private Long currentImageId;
-    private int currentDocumentsCount;
+    private boolean hasDocuments;
 
     public ParserTopics() throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
-        InputStream is = Parser.class.getClassLoader().getResourceAsStream("topics.json");
+        InputStream is = ParserWallPosts.class.getClassLoader().getResourceAsStream("topics.json");
 
         jParser = objectMapper.getFactory().createParser(is);
         jParser.nextToken();
-        this.currentDocumentsCount = 0;
+        this.hasDocuments = false;
         this.currentImageId = 1L;
     }
 
@@ -125,7 +126,7 @@ public class ParserTopics {
 
     private TopicComment getComment() {
         TopicComment comment = null;
-        currentDocumentsCount = 0;
+        hasDocuments = false;
         List<Image> images = new ArrayList<>();
         try {
             TopicComment.TopicCommentBuilder commentBuilder = TopicComment.builder();
@@ -133,16 +134,16 @@ public class ParserTopics {
                 if (jParser.currentName() != null) {
                     switch (jParser.currentName()) {
                         case "id":
-                            commentBuilder.topicCommentId(getLongValue(jParser));
+                            commentBuilder.topicCommentId(getNewCommentIdByOldId(getLongValue(jParser)));
                             break;
                         case "text":
-                            commentBuilder.text(jParser.getText());
+                            commentBuilder.text(formatTextInThreadComment(jParser.getText()));
                             break;
                         case "date":
                             commentBuilder.date(getDateTime(getLongValue(jParser)));
                             break;
                         case "from_id":
-                            commentBuilder.userId(getLongValue(jParser));
+                            commentBuilder.userId(getNewUserIdByOldId(getLongValue(jParser)));
                             break;
                         case "attachments":
 //                            jParser.nextToken();
@@ -154,8 +155,11 @@ public class ParserTopics {
                 jParser.nextToken();
             }
             comment = commentBuilder.build();
+            if (!images.isEmpty()) {
+                setTopicCommentIdForImages(comment.getTopicCommentId(), images);
+            }
             comment.setImages(images);
-            comment.setNumberOfDocuments(this.currentDocumentsCount);
+            comment.setHasDocuments(this.hasDocuments);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -195,7 +199,7 @@ public class ParserTopics {
                             }
                             break;
                         case "doc":
-                            this.currentDocumentsCount++;
+                            this.hasDocuments = true;
                             jParser.skipChildren();
                             break;
                     }
@@ -254,6 +258,11 @@ public class ParserTopics {
 
     private int getIntValue(JsonParser jParser) throws IOException {
         jParser.nextToken();
-        return jParser.getIntValue();
+        return Math.abs(jParser.getIntValue());
     }
+
+    private void setTopicCommentIdForImages(Long topicCommentId, List<Image> images) {
+        images.forEach(image -> image.setTopicCommentId(topicCommentId));
+    }
+
 }

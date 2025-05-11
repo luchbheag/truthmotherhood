@@ -29,30 +29,39 @@ public class ParserCommandLineRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         System.out.println("STARTS EXECUTION");
-        ParserTopics parserTopics = new ParserTopics();
-        List<Topic> topics = parserTopics.parseTopics();
-        System.out.println("Size:" + topics.size());
-        topicService.saveAll(topics);
-        int count = 0;
-        for (Topic topic : topics) {
-            count += topic.getComments().size();
-            System.out.println(topic.getTopicId());
-            System.out.println(topic.getComments().size());
-            topic.getComments().forEach(comment -> {
-                System.out.println("\t\t" + comment.getTopicCommentId() + " " + comment.getImages().size() + " " + comment.getNumberOfDocuments() + " " + comment.getTopicId());
-            });
-        }
-        System.out.println("Topics with comments:" + topics.size());
-        System.out.println("Comments:" + count);
+//        ParserTopics parserTopics = new ParserTopics();
+//        List<Topic> topics = parserTopics.parseTopics();
+//        System.out.println("Size:" + topics.size());
+//        topicService.saveAll(topics);
+//        int count = 0;
+//        for (Topic topic : topics) {
+//            count += topic.getComments().size();
+//            System.out.println(topic.getTopicId());
+//            System.out.println(topic.getComments().size());
+//            topic.getComments().forEach(comment -> {
+//                System.out.println("\t\t" + comment.getTopicCommentId() + " " + comment.getImages().size() + " " + comment.getHasDocuments() + " " + comment.getTopicId());
+//            });
+//        }
+//        JsonWriter.writeTopicsToJsonFile(topics, "topics.json");
+//        System.out.println("Topics with comments:" + topics.size());
+//        System.out.println("Comments:" + count);
+//
+//        List<Topic> topicsWithoutComments = topicService.findAll();
+//        List<Topic> topicsWithComments = new ArrayList<>();
+//        for (Topic topic : topicsWithoutComments) {
+//            Topic topicWithComment = topicService.findByIdWithComments(topic.getTopicId());
+//            topicsWithComments.add(topicWithComment);
+//        }
 
-        List<Topic> topicsWithoutComments = topicService.findAll();
-        List<Topic> topicsWithComments = new ArrayList<>();
-        for (Topic topic : topicsWithoutComments) {
-            Topic topicWithComment = topicService.findByIdWithComments(topic.getTopicId());
-            topicsWithComments.add(topicWithComment);
+        ParserWallPosts parser = new ParserWallPosts();
+        while (!parser.isEmpty()) {
+            WallPost post = parser.parseWallPost();
+            if (!(post == null || post.isEmpty())) {
+                System.out.println("WallPost id from parser: " + post.getWallPostId());
+                wallPostService.save(post);
+            }
         }
-        JsonWriter.writeTopicsToJsonFile(topicsWithComments, "topics.json");
-
+        parser.addAllInAFile();
         System.out.println("END EXECUTION");
         System.exit(0);
     }

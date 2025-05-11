@@ -14,30 +14,32 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Parser {
-    private static final Long idOfGroup = 8683208L;
+public class ParserWallPosts extends Parser {
+    private static final String videoStr = "https://vk.com/video%d_%d?access_key=%s";
+    private final List<String> videos;
+    private final List<Long> idsWithOnlyStickers;
     private final JsonParser jParser;
     private Long currentWallPostId;
     private Long currentInnerPostId;
     private Long currentImageId;
-    private Long currentCommentId;
-    private Long currentUserId;
-    private boolean hasOnlySticker;
-    private final Random random;
-    private Map<Long, Long> mapOldToNewCommentIds;
-    private Map<Long, Long> mapOldToNewUserIds;
+    private boolean hasDocuments;
+    private boolean hasLinks;
+    private boolean hasPoll;
+    private boolean hasVideos;
+    private boolean hasSticker;
 
-    public Parser() throws IOException {
+    public ParserWallPosts() throws IOException {
+        super();
         ObjectMapper objectMapper = new ObjectMapper();
-        InputStream is = Parser.class.getClassLoader().getResourceAsStream("wall_comments.json");
+        InputStream is = ParserWallPosts.class.getClassLoader().getResourceAsStream("wall_comments.json");
 
         jParser = objectMapper.getFactory().createParser(is);
         jParser.nextToken();
         this.currentWallPostId = 1L;
         this.currentInnerPostId = 1L;
         this.currentImageId = 2L; // because we need 1 for only image in topics
-        this.currentCommentId = 1L;
-        this.random = new Random();
+        this.videos = new ArrayList<>();
+        this.idsWithOnlyStickers = new ArrayList<>();
     }
 
     public WallPost parseWallPost() throws IOException {
@@ -62,6 +64,11 @@ public class Parser {
                             break;
                         case "attachments":
                             images = getAttachments(jParser);
+                            wallPostBuilder.hasDocuments(this.hasDocuments);
+                            wallPostBuilder.hasPoll(this.hasPoll);
+                            wallPostBuilder.hasVideo(this.hasVideos);
+                            wallPostBuilder.hasLinks(this.hasLinks);
+                            setAllFlagsFalse();
                             break;
                         case "copy_history":
                             innerPosts = getInnerPosts(jParser);
@@ -82,6 +89,18 @@ public class Parser {
                 }
             }
             post = wallPostBuilder.build();
+            if (post.getHasVideo() == null) {
+                post.setHasVideo(false);
+            }
+            if (post.getHasLinks() == null) {
+                post.setHasLinks(false);
+            }
+            if (post.getHasPoll() == null) {
+                post.setHasPoll(false);
+            }
+            if (post.getHasDocuments() == null) {
+                post.setHasDocuments(false);
+            }
             if (!images.isEmpty()) {
                 setWallPostIdForImages(this.currentWallPostId, images);
             }
@@ -149,6 +168,11 @@ public class Parser {
                 }
                 jParser.nextToken();
             }
+            innerPostBuilder.hasDocuments(this.hasDocuments);
+            innerPostBuilder.hasPoll(this.hasPoll);
+            innerPostBuilder.hasVideo(this.hasVideos);
+            innerPostBuilder.hasLinks(this.hasLinks);
+            setAllFlagsFalse();
             innerPost = innerPostBuilder.build();
             if (!images.isEmpty()) {
                 setInnerPostIdForImages(innerPost.getInnerPostId(), images);
@@ -166,9 +190,9 @@ public class Parser {
 
     private List<Comment> getComments(JsonParser jParser) throws IOException {
         List<Comment> comments = new ArrayList<>();
-        this.mapOldToNewCommentIds = new HashMap<>();
-        this.mapOldToNewUserIds = new HashMap<>();
-        this.currentUserId = 40000L + random.nextInt(1000);
+        mapOldToNewCommentIds = new HashMap<>();
+        mapOldToNewUserIds = new HashMap<>();
+        currentUserId = 40000L + random.nextInt(1000);
 
         jParser.nextToken();
         while(!(jParser.currentToken() == JsonToken.END_ARRAY
@@ -188,12 +212,14 @@ public class Parser {
             Comment.CommentBuilder commentBuilder = Comment.builder();
             List<Image> images = new ArrayList<>();
             List<Comment> thread = new ArrayList<>();
+            Long oldId = 0L;
             while (!(jParser.currentToken() == JsonToken.END_OBJECT
                     && jParser.currentName() == null)) {
                 if (jParser.currentName() != null) {
                     switch (jParser.currentName()) {
                         case "id":
-                            commentBuilder.commentId(getNewCommentIdByOldId(getLongValue(jParser)));
+                            oldId = getLongValue(jParser);
+                            commentBuilder.commentId(getNewCommentIdByOldId(oldId));
                             break;
                         case "from_id":
                             commentBuilder.userId(getNewUserIdByOldId(getLongValue(jParser)));
@@ -207,9 +233,16 @@ public class Parser {
                             break;
                         case "attachments":
                             images = getAttachments(jParser);
+                            commentBuilder.wallPostId(this.currentWallPostId);
+                            commentBuilder.hasDocuments(this.hasDocuments);
+                            commentBuilder.hasVideo(this.hasVideos);
+                            commentBuilder.hasLinks(this.hasLinks);
+                            commentBuilder.hasOnlySticker(this.hasSticker);
+                            setAllFlagsFalse();
                             break;
                         case "post_id":
                             getLongValue(jParser);
+                            commentBuilder.wallPostId(this.currentWallPostId);
                             break;
                         case "parents_stack":
                             jParser.skipChildren();
@@ -222,14 +255,43 @@ public class Parser {
                 }
                 jParser.nextToken();
             }
-            commentBuilder.wallPostId(this.currentWallPostId);
             comment = commentBuilder.build();
+            if (comment.getHasVideo() == null) {
+                comment.setHasVideo(false);
+            }
+            if (comment.getHasLinks() == null) {
+                comment.setHasLinks(false);
+            }
+            if (comment.getHasDocuments() == null) {
+                comment.setHasDocuments(false);
+            }
             if (!images.isEmpty()) {
                 setCommentIdForImages(comment.getCommentId(), images);
             }
+            if (comment.getHasOnlySticker() == null) {
+                comment.setHasOnlySticker(false);
+            }
+            if (comment.getWallPostId() == null || comment.getWallPostId().equals(0L)) {
+                comment.setCommentId(currentWallPostId);
+            }
             comment.setImages(images);
-            comments.add(comment);
-            comments.addAll(thread);
+            if (comment.getText().isEmpty()
+                && !(comment.getHasDocuments() || comment.getHasLinks() ||
+                    comment.getHasVideo())
+                && comment.getImages().isEmpty()) {
+                if (!thread.isEmpty()) {
+                    //System.out.println("This comment is thread-starter: " + comment.getCommentId() + " - " + oldId + " has only sticker " + comment.getHasOnlySticker());
+                    comments.add(comment);
+                    comments.addAll(thread);
+                    if (comment.getHasOnlySticker()) {
+                        idsWithOnlyStickers.add(oldId);
+                        idsWithOnlyStickers.add(comment.getCommentId());
+                    }
+                }
+            } else {
+                comments.add(comment);
+                comments.addAll(thread);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -315,6 +377,10 @@ public class Parser {
                 }
                 jParser.nextToken();
             }
+            commentBuilder.hasDocuments(this.hasDocuments);
+            commentBuilder.hasVideo(this.hasVideos);
+            commentBuilder.hasLinks(this.hasLinks);
+            setAllFlagsFalse();
             comment = commentBuilder.build();
             if (!images.isEmpty()) {
                 setCommentIdForImages(comment.getCommentId(), images);
@@ -329,8 +395,10 @@ public class Parser {
 
     private List<Image> getAttachments(JsonParser jParser) throws IOException {
         List<Image> images = new ArrayList<>();
+        setAllFlagsFalse();
         jParser.nextToken();
         jParser.nextToken();
+        setAllFlagsFalse();
         while (!(jParser.currentToken() == JsonToken.END_ARRAY
                 && "attachments".equals(jParser.currentName()))) {
             jParser.nextToken();
@@ -344,10 +412,24 @@ public class Parser {
                             }
                             break;
                         case "doc":
+                            this.hasDocuments = true;
+                            jParser.skipChildren();
+                            break;
                         case "link":
+                            this.hasLinks = true;
+                            jParser.skipChildren();
+                            break;
                         case "video":
+                            this.hasVideos = true;
+//                            getAndWriteInFileVideoSettings(jParser);
+                            getVideo(jParser);
+                            break;
                         case "sticker":
+                            this.hasSticker = true;
+                            jParser.skipChildren();
+                            break;
                         case "poll":
+                            this.hasPoll = true;
                             jParser.skipChildren();
                             break;
                     }
@@ -357,6 +439,38 @@ public class Parser {
         return images;
     }
 
+    private void getVideo(JsonParser jParser) throws IOException {
+        String accessKey = "";
+        long ownerId = 0L;
+        long id = 0L;
+        try {
+            while (!(jParser.currentToken() == JsonToken.END_OBJECT
+                    && "video".equals(jParser.currentName()))) {
+                if (jParser.currentName() != null) {
+                    switch (jParser.currentName()) {
+                        case "access_key":
+                            accessKey = jParser.getText();
+                            break;
+                        case "owner_id":
+                            ownerId = getLongValue(jParser);
+                            break;
+                        case "id":
+                            id = getLongValue(jParser);
+                            break;
+                        case "restriction":
+                            jParser.skipChildren();
+                            break;
+                    }
+                }
+                jParser.nextToken();
+            }
+            videos.add(String.format(videoStr, ownerId, id, accessKey));
+        } catch (IOException e) {
+            e.printStackTrace();
+            jParser.skipChildren();
+        }
+    }
+
     private Image getImage(JsonParser jParser) throws IOException {
         jParser.nextToken();
         Image image = null;
@@ -364,17 +478,19 @@ public class Parser {
             Image.ImageBuilder imageBuilder = Image.builder();
             while (!(jParser.currentToken() == JsonToken.END_OBJECT
                     && "photo".equals(jParser.currentName()))) {
-                switch (jParser.currentName()) {
-                    case "id":
-                        getLongValue(jParser);
-                        imageBuilder.id(this.currentImageId++);
-                        break;
-                    case "orig_photo":
-                        fillImageSizesAndUrl(jParser, imageBuilder);
-                        break;
-                    case "sizes":
-                        jParser.skipChildren();
-                        break;
+                if (jParser.currentName() != null) {
+                    switch (jParser.currentName()) {
+                        case "id":
+                            getLongValue(jParser);
+                            imageBuilder.id(this.currentImageId++);
+                            break;
+                        case "orig_photo":
+                            fillImageSizesAndUrl(jParser, imageBuilder);
+                            break;
+                        case "sizes":
+                            jParser.skipChildren();
+                            break;
+                    }
                 }
                 jParser.nextToken();
             }
@@ -453,44 +569,62 @@ public class Parser {
         images.forEach(image -> image.setCommentId(commentId));
     }
 
-    private long getNewUserIdByOldId(Long oldUserId) {
-        if (!this.mapOldToNewUserIds.containsKey(oldUserId)) {
-            this.mapOldToNewUserIds.put(oldUserId, this.currentUserId);
-            this.currentUserId += random.nextInt(20);
-        }
-        return this.mapOldToNewUserIds.get(oldUserId);
+    public void addAllInAFile() {
+        JsonWriter.writeLinksToJsonFile(videos, "video_links.json");
+        JsonWriter.writeIdsToJsonFile(idsWithOnlyStickers, "sticker_comments.json");
     }
 
-    private long getNewCommentIdByOldId(Long oldId) {
-        if (!this.mapOldToNewCommentIds.containsKey(oldId)) {
-            this.mapOldToNewCommentIds.put(oldId, this.currentCommentId++);
-        }
-        return this.mapOldToNewCommentIds.get(oldId);
+//    private long getNewUserIdByOldId(Long oldUserId) {
+//        if (!this.mapOldToNewUserIds.containsKey(oldUserId)) {
+//            this.mapOldToNewUserIds.put(oldUserId, this.currentUserId);
+//            this.currentUserId += random.nextInt(20);
+//        }
+//        return this.mapOldToNewUserIds.get(oldUserId);
+//    }
+//
+//    private long getNewCommentIdByOldId(Long oldId) {
+//        if (!this.mapOldToNewCommentIds.containsKey(oldId)) {
+//            this.mapOldToNewCommentIds.put(oldId, this.currentCommentId++);
+//        }
+//        return this.mapOldToNewCommentIds.get(oldId);
+//    }
+
+    // TEST IT BETTER
+//    private String formatTextInThreadComment(String text) {
+//        Pattern patternForUser = Pattern.compile("\\[id(\\d+)\\|");
+//        Matcher matcherForUser = patternForUser.matcher(text);
+//
+//        Pattern patternForGroup = Pattern.compile("\\[group(\\d+)\\|");
+//        Matcher matcherForGroup = patternForGroup.matcher(text);
+//
+//        long newUserId = 0L;
+//
+//        if (matcherForUser.find()) {
+//            String numberStr = matcherForUser.group(1);
+//            Long oldUserId = Math.abs(Long.parseLong(numberStr));
+//            newUserId = getNewUserIdByOldId(oldUserId);
+//            text = text.replaceFirst("\\[id\\d+\\|[^\\]]+]", String.format("[id%d]", newUserId));
+//        } else if (matcherForGroup.find()) {
+//            String numberStr = matcherForUser.group(1);
+//            Long oldGroupId = Math.abs(Long.parseLong(numberStr));
+//            if (!oldGroupId.equals(idOfGroup)) {
+//                newUserId = getNewUserIdByOldId(oldGroupId);
+//                text = text.replaceFirst("\\[group\\d+\\|[^\\]]+]", String.format("[id%d]", newUserId));
+//            }
+//        }
+//
+//        return text;
+//    }
+
+    private void getAndWriteInFileVideoSettings(JsonParser jParser) throws IOException {
+        jParser.skipChildren();
     }
 
-    private String formatTextInThreadComment(String text) {
-        Pattern patternForUser = Pattern.compile("\\[id(\\d+)\\|");
-        Matcher matcherForUser = patternForUser.matcher(text);
-
-        Pattern patternForGroup = Pattern.compile("\\[group(\\d+)\\|");
-        Matcher matcherForGroup = patternForGroup.matcher(text);
-
-        long newUserId = 0L;
-
-        if (matcherForUser.find()) {
-            String numberStr = matcherForUser.group(1);
-            Long oldUserId = Math.abs(Long.parseLong(numberStr));
-            newUserId = getNewUserIdByOldId(oldUserId);
-            text = text.replaceFirst("\\[id\\d+\\|[^\\]]+]", String.format("[id%d]", newUserId));
-        } else if (matcherForGroup.find()) {
-            String numberStr = matcherForUser.group(1);
-            Long oldGroupId = Math.abs(Long.parseLong(numberStr));
-            if (!oldGroupId.equals(idOfGroup)) {
-                newUserId = getNewUserIdByOldId(oldGroupId);
-                text = text.replaceFirst("\\[id\\d+\\|[^\\]]+]", String.format("[id%d]", newUserId));
-            }
-        }
-
-        return text.replaceFirst("\\[id\\d+\\|[^\\]]+]", String.format("[id%d]", newUserId));
+    private void setAllFlagsFalse() {
+        this.hasDocuments = false;
+        this.hasLinks = false;
+        this.hasPoll = false;
+        this.hasVideos = false;
+        this.hasSticker = false;
     }
 }

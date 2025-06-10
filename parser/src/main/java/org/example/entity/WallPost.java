@@ -15,6 +15,7 @@ public class WallPost {
     private Long wallPostId;
     private String text;
     private LocalDateTime date;
+    private Boolean hasImages;
     private Boolean hasDocuments;
     private Boolean hasPoll;
     private Boolean hasLinks;
@@ -27,6 +28,7 @@ public class WallPost {
             Long wallPostId,
             String text,
             LocalDateTime date,
+            Boolean hasImages,
             Boolean hasDocuments,
             Boolean hasPoll,
             Boolean hasLinks,
@@ -35,6 +37,7 @@ public class WallPost {
         this.wallPostId = wallPostId;
         this.text = text;
         this.date = date;
+        this.hasImages = hasImages;
         this.hasDocuments = hasDocuments;
         this.hasPoll = hasPoll;
         this.hasLinks = hasLinks;

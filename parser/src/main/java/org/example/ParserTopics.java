@@ -88,6 +88,7 @@ public class ParserTopics extends Parser {
             topic = topicBuilder.build();
             if (!comments.isEmpty()) {
                 setTopicIdForComments(topic.getTopicId(), comments);
+                topic.setNumberOfComments(comments.size());
                 topic.setComments(comments);
             }
         } catch (IOException e) {
@@ -158,6 +159,7 @@ public class ParserTopics extends Parser {
             if (!images.isEmpty()) {
                 setTopicCommentIdForImages(comment.getTopicCommentId(), images);
             }
+            comment.setHasImages(!images.isEmpty());
             comment.setImages(images);
             comment.setHasDocuments(this.hasDocuments);
         } catch (IOException e) {

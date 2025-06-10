@@ -104,6 +104,7 @@ public class ParserWallPosts extends Parser {
             if (!images.isEmpty()) {
                 setWallPostIdForImages(this.currentWallPostId, images);
             }
+            post.setHasImages(!images.isEmpty());
             post.setImages(images);
             if (!innerPosts.isEmpty()) {
                 setWallPostIdForInnerPosts(this.currentWallPostId, innerPosts);
@@ -177,6 +178,7 @@ public class ParserWallPosts extends Parser {
             if (!images.isEmpty()) {
                 setInnerPostIdForImages(innerPost.getInnerPostId(), images);
             }
+            innerPost.setHasImages(!images.isEmpty());
             innerPost.setImages(images);
             innerPost.setWallPostId(this.currentWallPostId);
             this.currentInnerPostId++;
@@ -210,6 +212,7 @@ public class ParserWallPosts extends Parser {
         Comment comment = null;
         try {
             Comment.CommentBuilder commentBuilder = Comment.builder();
+            commentBuilder.hasImages(false);
             List<Image> images = new ArrayList<>();
             List<Comment> thread = new ArrayList<>();
             Long oldId = 0L;
@@ -274,6 +277,7 @@ public class ParserWallPosts extends Parser {
             if (comment.getWallPostId() == null || comment.getWallPostId().equals(0L)) {
                 comment.setCommentId(currentWallPostId);
             }
+            comment.setHasImages(!images.isEmpty());
             comment.setImages(images);
             if (comment.getText().isEmpty()
                 && !(comment.getHasDocuments() || comment.getHasLinks() ||
@@ -328,6 +332,7 @@ public class ParserWallPosts extends Parser {
     private Comment getThreadComment(JsonParser jParser) throws IOException {
         Comment comment = null;
         Comment.CommentBuilder commentBuilder = Comment.builder();
+        commentBuilder.hasImages(false);
         try {
             List<Image> images = new ArrayList<>();
             while (!(jParser.currentToken() == JsonToken.END_OBJECT
@@ -380,11 +385,13 @@ public class ParserWallPosts extends Parser {
             commentBuilder.hasDocuments(this.hasDocuments);
             commentBuilder.hasVideo(this.hasVideos);
             commentBuilder.hasLinks(this.hasLinks);
+            commentBuilder.hasOnlySticker(false);
             setAllFlagsFalse();
             comment = commentBuilder.build();
             if (!images.isEmpty()) {
                 setCommentIdForImages(comment.getCommentId(), images);
             }
+            comment.setHasImages(!images.isEmpty());
             comment.setImages(images);
         } catch (IOException e) {
             e.printStackTrace();
@@ -570,7 +577,7 @@ public class ParserWallPosts extends Parser {
     }
 
     public void addAllInAFile() {
-        JsonWriter.writeLinksToJsonFile(videos, "video_links.json");
+        //JsonWriter.writeLinksToJsonFile(videos, "video_links.json");
         JsonWriter.writeIdsToJsonFile(idsWithOnlyStickers, "sticker_comments.json");
     }
 

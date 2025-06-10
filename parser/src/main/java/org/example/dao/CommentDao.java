@@ -12,8 +12,8 @@ import java.util.List;
 
 @Repository
 public class CommentDao {
-    private final static String ADD_COMMENT_SQL = "INSERT OR IGNORE INTO comments (comment_id, user_id, text, date, wall_post_id, thread_starter_id, comment_to_answer_id, user_to_answer_id, has_documents, has_links, has_videos, has_only_stickers) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
-    private final static String SELECT_ALL_COMMENTS_BY_WALL_POST_SQL = "SELECT comment_id, user_id, text, date, wall_post_id, thread_starter_id, comment_to_answer_id, user_to_answer_id, has_documents, has_links, has_videos, has_only_stickers FROM comments WHERE wall_post_id = ?";
+    private final static String ADD_COMMENT_SQL = "INSERT OR IGNORE INTO comments (comment_id, user_id, text, date, wall_post_id, thread_starter_id, comment_to_answer_id, user_to_answer_id, has_images, has_documents, has_links, has_videos, has_only_stickers) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    private final static String SELECT_ALL_COMMENTS_BY_WALL_POST_SQL = "SELECT comment_id, user_id, text, date, wall_post_id, thread_starter_id, comment_to_answer_id, user_to_answer_id, has_images, has_documents, has_links, has_videos, has_only_stickers FROM comments WHERE wall_post_id = ?";
     private final static String COUNT_ALL_SQL = "SELECT COUNT(*) as count FROM comments";
     private final JdbcTemplate jdbcTemplate;
 
@@ -35,10 +35,11 @@ public class CommentDao {
                     comment.getThreadStarterId(),
                     comment.getCommentToAnswerId(),
                     comment.getUserToAnswerId(),
-                    comment.getHasDocuments(),
-                    comment.getHasLinks(),
-                    comment.getHasVideo(),
-                    comment.getHasOnlySticker()
+                    comment.getHasImages() ? 1 : 0,
+                    comment.getHasDocuments() ? 1 : 0,
+                    comment.getHasLinks() ? 1 : 0,
+                    comment.getHasVideo() ? 1 : 0,
+                    comment.getHasOnlySticker() ? 1 : 0
             );
         }
     }
@@ -69,6 +70,7 @@ public class CommentDao {
                 rs.getLong("thread_starter_id"),
                 rs.getLong("comment_to_answer_id"),
                 rs.getLong("user_to_answer_id"),
+                rs.getInt("has_images") > 0,
                 rs.getInt("has_documents") > 0,
                 rs.getInt("has_links") > 0,
                 rs.getInt("has_videos") > 0,

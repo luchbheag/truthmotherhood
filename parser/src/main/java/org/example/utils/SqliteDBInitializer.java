@@ -20,11 +20,13 @@ public class SqliteDBInitializer {
 
     @PostConstruct
     public void createTables() {
+        // TODO: indexes?
         String sqlWallPosts = """
                 CREATE TABLE IF NOT EXISTS wall_posts (
                     wall_post_id INTEGER PRIMARY KEY,
                     text TEXT NULL,
                     date TEXT NULL,
+                    has_images INTEGER DEFAULT 0,
                     has_documents INTEGER DEFAULT 0,
                     has_polls INTEGER DEFAULT 0,
                     has_links INTEGER DEFAULT 0,
@@ -49,6 +51,7 @@ public class SqliteDBInitializer {
                     text TEXT NULL,
                     date TEXT NULL,
                     wall_post_id INTEGER NOT NULL,
+                    has_images INTEGER DEFAULT 0,
                     has_documents INTEGER DEFAULT 0,
                     has_polls INTEGER DEFAULT 0,
                     has_links INTEGER DEFAULT 0,
@@ -65,6 +68,7 @@ public class SqliteDBInitializer {
                     thread_starter_id INTEGER NULL,
                     comment_to_answer_id INTEGER NULL,
                     user_to_answer_id INTEGER NULL,
+                    has_images INTEGER DEFAULT 0,
                     has_documents INTEGER DEFAULT 0,
                     has_polls INTEGER DEFAULT 0,
                     has_links INTEGER DEFAULT 0,
@@ -76,7 +80,8 @@ public class SqliteDBInitializer {
                 CREATE TABLE IF NOT EXISTS topics (
                     topic_id INTEGER PRIMARY KEY,
                     title TEXT NULL,
-                    date TEXT NULL
+                    date TEXT NULL,
+                    number_of_comments INTEGER
                 )
                 """;
         String sqlTopicComments = """
@@ -86,6 +91,7 @@ public class SqliteDBInitializer {
                     date TEXT NULL,
                     user_id INTEGER NULL,
                     topic_id INTEGER NULL,
+                    has_images INTEGER DEFAULT 0,
                     has_documents INTEGER DEFAULT 0
                 )
                 """;

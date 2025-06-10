@@ -30,6 +30,7 @@ public class TopicCommentServiceImpl implements TopicCommentService {
         for (TopicComment comment : comments) {
             topicCommentDao.save(comment);
             if (!(comment.getImages() == null || comment.getImages().isEmpty())) {
+                //System.out.println("!!HERE!!" + comment.getImages().get(0).getTopicCommentId());
                 imageService.saveAll(comment.getImages());
             }
         }

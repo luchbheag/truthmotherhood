@@ -17,6 +17,7 @@ public class InnerPost {
     private String text;
     private LocalDateTime date;
     private Long wallPostId;
+    private Boolean hasImages;
     private Boolean hasDocuments;
     private Boolean hasPoll;
     private Boolean hasLinks;
@@ -29,6 +30,7 @@ public class InnerPost {
             String text,
             Long wallPostId,
             LocalDateTime date,
+            Boolean hasImages,
             Boolean hasDocuments,
             Boolean hasPoll,
             Boolean hasLinks,
@@ -37,6 +39,7 @@ public class InnerPost {
         this.text = text;
         this.wallPostId = wallPostId;
         this.date = date;
+        this.hasImages = hasImages;
         this.hasDocuments = hasDocuments;
         this.hasPoll = hasPoll;
         this.hasLinks = hasLinks;

@@ -37,7 +37,8 @@ public class ImageDao {
                 image.getUrl(),
                 image.getWallPostId(),
                 image.getInnerPostId(),
-                image.getCommentId()
+                image.getCommentId(),
+                image.getTopicCommentId()
         );
     }
 
@@ -102,7 +103,7 @@ public class ImageDao {
                 rs.getLong("wall_post_id"),
                 rs.getLong("inner_post_id"),
                 rs.getLong("comment_id"),
-                rs.getLong("topic_comments_id")
+                rs.getLong("topic_comment_id")
         );
     }
 }

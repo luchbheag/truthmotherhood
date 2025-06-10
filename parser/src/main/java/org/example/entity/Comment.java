@@ -20,6 +20,7 @@ public class Comment {
     private Long threadStarterId;
     private Long commentToAnswerId;
     private Long userToAnswerId;
+    private Boolean hasImages;
     private Boolean hasDocuments;
     private Boolean hasLinks;
     private Boolean hasVideo;
@@ -34,6 +35,7 @@ public class Comment {
                    Long threadStarterId,
                    Long commentToAnswerId,
                    Long userToAnswerId,
+                   Boolean hasImages,
                    Boolean hasDocuments,
                    Boolean hasLinks,
                    Boolean hasVideo,
@@ -46,6 +48,7 @@ public class Comment {
         this.threadStarterId = threadStarterId;
         this.commentToAnswerId = commentToAnswerId;
         this.userToAnswerId = userToAnswerId;
+        this.hasImages = hasImages;
         this.hasDocuments = hasDocuments;
         this.hasLinks = hasLinks;
         this.hasVideo = hasVideo;

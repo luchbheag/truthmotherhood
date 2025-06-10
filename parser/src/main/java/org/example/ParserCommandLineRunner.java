@@ -29,10 +29,10 @@ public class ParserCommandLineRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         System.out.println("STARTS EXECUTION");
-//        ParserTopics parserTopics = new ParserTopics();
-//        List<Topic> topics = parserTopics.parseTopics();
-//        System.out.println("Size:" + topics.size());
-//        topicService.saveAll(topics);
+        ParserTopics parserTopics = new ParserTopics();
+        List<Topic> topics = parserTopics.parseTopics();
+        System.out.println("Size:" + topics.size());
+        topicService.saveAll(topics);
 //        int count = 0;
 //        for (Topic topic : topics) {
 //            count += topic.getComments().size();
@@ -45,7 +45,7 @@ public class ParserCommandLineRunner implements CommandLineRunner {
 //        JsonWriter.writeTopicsToJsonFile(topics, "topics.json");
 //        System.out.println("Topics with comments:" + topics.size());
 //        System.out.println("Comments:" + count);
-//
+
 //        List<Topic> topicsWithoutComments = topicService.findAll();
 //        List<Topic> topicsWithComments = new ArrayList<>();
 //        for (Topic topic : topicsWithoutComments) {

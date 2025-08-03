@@ -12,8 +12,8 @@ import java.util.List;
 
 @Repository
 public class CommentDao {
-    private final static String ADD_COMMENT_SQL = "INSERT OR IGNORE INTO comments (comment_id, user_id, text, date, wall_post_id, thread_starter_id, comment_to_answer_id, user_to_answer_id, has_images, has_documents, has_links, has_videos, has_only_stickers) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
-    private final static String SELECT_ALL_COMMENTS_BY_WALL_POST_SQL = "SELECT comment_id, user_id, text, date, wall_post_id, thread_starter_id, comment_to_answer_id, user_to_answer_id, has_images, has_documents, has_links, has_videos, has_only_stickers FROM comments WHERE wall_post_id = ?";
+    private final static String ADD_COMMENT_SQL = "INSERT OR IGNORE INTO comments (comment_id, user_id, user_name, text, date, wall_post_id, thread_starter_id, comment_to_answer_id, user_to_answer_id, has_images, has_documents, has_links, has_videos, has_only_stickers) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    private final static String SELECT_ALL_COMMENTS_BY_WALL_POST_SQL = "SELECT comment_id, user_id, user_name, text, date, wall_post_id, thread_starter_id, comment_to_answer_id, user_to_answer_id, has_images, has_documents, has_links, has_videos, has_only_stickers FROM comments WHERE wall_post_id = ?";
     private final static String COUNT_ALL_SQL = "SELECT COUNT(*) as count FROM comments";
     private final JdbcTemplate jdbcTemplate;
 
@@ -24,11 +24,24 @@ public class CommentDao {
 
 
     public void saveAll(List<Comment> comments) {
+//        System.out.println(comments.size());
+//        int cur = 0;
+//        Integer count = jdbcTemplate.queryForObject(
+//                "SELECT COUNT(*) FROM wall_posts WHERE wall_post_id = ?",
+//                Integer.class,
+//                comments.get(0).getWallPostId()
+//        );
+//        System.out.println("wall_post_id = " + comments.get(0).getWallPostId() + " exists in wall_posts? " + count);
         for (Comment comment : comments) {
+//            System.out.println("Wall_post_id: " + comment.getWallPostId() + " " + cur++);
+//            if (cur >= 29) {
+//                System.out.println(comment);
+//            }
             jdbcTemplate.update(
                     ADD_COMMENT_SQL,
                     comment.getCommentId(),
                     comment.getUserId(),
+                    comment.getUserName(),
                     comment.getText(),
                     comment.getDate(),
                     comment.getWallPostId(),
@@ -64,6 +77,7 @@ public class CommentDao {
         return new Comment(
                 rs.getLong("comment_id"),
                 rs.getLong("user_id"),
+                rs.getString("user_name"),
                 rs.getString("text"),
                 LocalDateTime.parse(rs.getString("date")),
                 rs.getLong("wall_post_id"),

@@ -13,8 +13,8 @@ import java.util.List;
 
 @Repository
 public class TopicCommentDao {
-    private final static String ADD_TOPIC_COMMENT_SQL="INSERT OR IGNORE INTO topic_comments (topic_comment_id, text, date, user_id, topic_id, has_images, has_documents) VALUES(?,?,?,?,?,?,?)";
-    private final static String SELECT_ALL_TOPIC_COMMENTS_BY_ID_SQL="SELECT topic_comment_id, text, date, user_id, topic_id, has_images, has_documents FROM topic_comments WHERE topic_id = ?";
+    private final static String ADD_TOPIC_COMMENT_SQL="INSERT OR IGNORE INTO topic_comments (topic_comment_id, text, date, user_id, user_name, topic_id, has_images, has_documents) VALUES(?,?,?,?,?,?,?,?)";
+    private final static String SELECT_ALL_TOPIC_COMMENTS_BY_ID_SQL="SELECT topic_comment_id, text, date, user_id, user_name, topic_id, has_images, has_documents FROM topic_comments WHERE topic_id = ?";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -30,6 +30,7 @@ public class TopicCommentDao {
                 comment.getText(),
                 comment.getDate(),
                 comment.getUserId(),
+                comment.getUserName(),
                 comment.getTopicId(),
                 comment.getHasImages() ? 1 : 0,
                 comment.getHasDocuments() ? 1 : 0
@@ -50,6 +51,7 @@ public class TopicCommentDao {
                 rs.getString("text"),
                 LocalDateTime.parse(rs.getString("date")),
                 rs.getLong("user_id"),
+                rs.getString("user_name"),
                 rs.getLong("topic_id"),
                 rs.getInt("has_images") > 0,
                 rs.getInt("has_documents") > 0

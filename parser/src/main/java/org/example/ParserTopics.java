@@ -101,7 +101,6 @@ public class ParserTopics extends Parser {
         List<TopicComment> comments = new ArrayList<>();
         try {
             jParser.nextToken();
-            //System.out.println("FIRST TOKEN AFTER: " + jParser.currentToken() + jParser.currentName());
             if (jParser.currentToken() == JsonToken.END_OBJECT) {
                 return comments;
             }
@@ -138,18 +137,19 @@ public class ParserTopics extends Parser {
                             commentBuilder.topicCommentId(getNewCommentIdByOldId(getLongValue(jParser)));
                             break;
                         case "text":
-                            commentBuilder.text(formatTextInThreadComment(jParser.getText()));
+                            commentBuilder.text(formatTextWithReply(jParser.getText()));
                             break;
                         case "date":
                             commentBuilder.date(getDateTime(getLongValue(jParser)));
                             break;
                         case "from_id":
-                            commentBuilder.userId(getNewUserIdByOldId(getLongValue(jParser)));
+                            long userId = getNewUserIdByOldId(getLongValue(jParser));
+                            String userName = mapNewUserIdToName.get(userId);
+                            commentBuilder.userId(userId);
+                            commentBuilder.userName(userName);
                             break;
                         case "attachments":
-//                            jParser.nextToken();
                             images = getAttachments(jParser);
-//                            jParser.nextToken();
                             break;
                     }
                 }
@@ -265,6 +265,10 @@ public class ParserTopics extends Parser {
 
     private void setTopicCommentIdForImages(Long topicCommentId, List<Image> images) {
         images.forEach(image -> image.setTopicCommentId(topicCommentId));
+    }
+
+    public void addAllInAFile() {
+        JsonWriter.writeIdsMapToJsonFile(super.mapOldToNewCommentIds, "topic_comment_map.json");
     }
 
 }

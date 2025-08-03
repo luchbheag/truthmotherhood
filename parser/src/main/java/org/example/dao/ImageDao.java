@@ -1,10 +1,8 @@
 package org.example.dao;
 
 import org.example.entity.Image;
-import org.example.entity.WallPost;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
@@ -14,12 +12,12 @@ import java.util.List;
 
 @Repository
 public class ImageDao {
-    private final static String ADD_IMAGE_SQL = "INSERT OR IGNORE INTO images (image_id, height, width, url, wall_post_id, inner_post_id, comment_id, topic_comment_id) VALUES(?,?,?,?,?,?,?,?)";
-    private final static String SELECT_ALL_IMAGES_BY_WALL_POST_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, topic_comment_id FROM images WHERE wall_post_id = ?";
-    private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_WALL_POSTS_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, comment_id, topic_comment_id FROM images WHERE wall_post_id IN (%s)";
-    private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_INNER_POSTS_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, comment_id, topic_comment_id FROM images WHERE inner_post_id IN (%s)";
-    private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_COMMENTS_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, comment_id, topic_comment_id FROM images WHERE comment_id IN (%s)";
-    private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_TOPIC_COMMENTS_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, comment_id, topic_comment_id FROM images WHERE topic_comment_id IN (%s)";
+    private final static String ADD_IMAGE_SQL = "INSERT OR IGNORE INTO images (image_id, height, width, url, wall_post_id, inner_post_id, comment_id, topic_comment_id, contact_id) VALUES(?,?,?,?,?,?,?,?,?)";
+    private final static String SELECT_ALL_IMAGES_BY_WALL_POST_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, topic_comment_id, contact_id FROM images WHERE wall_post_id = ?";
+    private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_WALL_POSTS_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, comment_id, topic_comment_id, contact_id FROM images WHERE wall_post_id IN (%s)";
+    private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_INNER_POSTS_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, comment_id, topic_comment_id, contact_id FROM images WHERE inner_post_id IN (%s)";
+    private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_COMMENTS_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, comment_id, topic_comment_id, contact_id FROM images WHERE comment_id IN (%s)";
+    private final static String SELECT_ALL_IMAGES_BY_MULTIPLE_TOPIC_COMMENTS_SQL = "SELECT image_id, height, width, url, wall_post_id, inner_post_id, comment_id, topic_comment_id, contact_id FROM images WHERE topic_comment_id IN (%s)";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -38,7 +36,8 @@ public class ImageDao {
                 image.getWallPostId(),
                 image.getInnerPostId(),
                 image.getCommentId(),
-                image.getTopicCommentId()
+                image.getTopicCommentId(),
+                image.getContactId()
         );
     }
 
@@ -103,7 +102,8 @@ public class ImageDao {
                 rs.getLong("wall_post_id"),
                 rs.getLong("inner_post_id"),
                 rs.getLong("comment_id"),
-                rs.getLong("topic_comment_id")
+                rs.getLong("topic_comment_id"),
+                rs.getLong("contact_id")
         );
     }
 }

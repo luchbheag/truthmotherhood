@@ -9,6 +9,7 @@ import org.example.entity.WallPost;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class JsonWriter {
     public static void writeWallPostsToJsonFile(List<WallPost> posts, String filename) {
@@ -54,6 +55,20 @@ public class JsonWriter {
     }
 
     public static void writeIdsToJsonFile(List<Long> ids, String filename) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        try {
+            mapper.writeValue(new File(filename), ids);
+            System.out.println("JSON записан в файл: " + filename);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeIdsMapToJsonFile(Map<Long, Long> ids, String filename) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         mapper.registerModule(new JavaTimeModule());

@@ -33,6 +33,7 @@ public class ParserCommandLineRunner implements CommandLineRunner {
         List<Topic> topics = parserTopics.parseTopics();
         System.out.println("Size:" + topics.size());
         topicService.saveAll(topics);
+        parserTopics.addAllInAFile();
 //        int count = 0;
 //        for (Topic topic : topics) {
 //            count += topic.getComments().size();

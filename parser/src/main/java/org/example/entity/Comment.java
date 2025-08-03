@@ -14,6 +14,7 @@ import java.util.List;
 public class Comment {
     private Long commentId;
     private Long userId;
+    private String userName;
     private String text;
     private LocalDateTime date;
     private Long wallPostId;
@@ -30,6 +31,7 @@ public class Comment {
     public Comment(Long commentId,
                    Long userId,
                    String text,
+                   String userName,
                    LocalDateTime date,
                    Long wallPostId,
                    Long threadStarterId,
@@ -42,6 +44,7 @@ public class Comment {
                    Boolean hasOnlySticker) {
         this.commentId = commentId;
         this.userId = userId;
+        this.userName = userName;
         this.text = text;
         this.date = date;
         this.wallPostId = wallPostId;

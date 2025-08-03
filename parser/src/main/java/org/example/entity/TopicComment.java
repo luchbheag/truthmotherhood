@@ -16,6 +16,7 @@ public class TopicComment {
     private String text;
     private LocalDateTime date;
     private Long userId;
+    private String userName;
     private Long topicId;
     private Boolean hasImages;
     private Boolean hasDocuments;
@@ -28,6 +29,7 @@ public class TopicComment {
             String text,
             LocalDateTime date,
             Long userId,
+            String userName,
             Long topicId,
             boolean hasImages,
             boolean hasDocuments
@@ -36,6 +38,7 @@ public class TopicComment {
         this.text = text;
         this.date = date;
         this.userId = userId;
+        this.userName = userName;
         this.topicId = topicId;
         this.hasImages = hasImages;
         this.hasDocuments = hasDocuments;

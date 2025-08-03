@@ -34,6 +34,7 @@ public class WallPostServiceImpl implements WallPostService {
 
     @Override
     public void save(WallPost wallPost) {
+        System.out.println(wallPost.getWallPostId());
         wallPostDao.save(wallPost);
         if (!wallPost.getImages().isEmpty()) {
             imageService.saveAll(wallPost.getImages());
@@ -42,6 +43,7 @@ public class WallPostServiceImpl implements WallPostService {
             innerPostService.saveAll(wallPost.getInnerPosts());
         }
         if (!wallPost.getComments().isEmpty()) {
+            //System.out.println(wallPost.getComments());
             commentService.saveAll(wallPost.getComments());
         }
     }
